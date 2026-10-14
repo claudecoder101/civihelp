@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { api } from '../api'
+import { api, getCitizen, store } from '../api'
 import { Badge, ErrorBox, Icon, Loading, fmtTime, relDue, statusTone, useApi, useLang } from '../ui'
 import { DispatchTrail } from '../dispatch'
 
@@ -26,6 +26,7 @@ export default function Track() {
         </div>
         <button className="btn btn-primary"><span className="ta">{t.trackBtn}</span></button>
       </form>
+      <QuickIds onPick={v => { setQ(v); nav(`/track/${v}`) }} />
 
       <div className="mt-8">
         {loading && <Loading />}
@@ -52,6 +53,25 @@ function Stepper({ status, t }) {
         )
       })}
     </ol>
+  )
+}
+
+/* Your recent reports (this browser) + demo sample IDs, one click each. */
+function QuickIds({ onPick }) {
+  const citizen = getCitizen()
+  const { data: samples } = useApi('/api/demo/samples')
+  let mine = []
+  try { mine = citizen ? JSON.parse(store.get(`cr_my_${citizen.id}`) || '[]') : [] } catch { /* storage blocked */ }
+  const chip = (id, label) => (
+    <button key={id} type="button" onClick={() => onPick(id)} className="chip flex min-h-9 items-center gap-2 rounded-full px-3 text-[13px] font-semibold">
+      <span className="font-mono">{id.slice(0, 7)}</span>{label && <span className="text-ink-2">· {label}</span>}
+    </button>
+  )
+  return (
+    <div className="mt-4 space-y-2">
+      {mine.length > 0 && <div className="flex flex-wrap items-center gap-2"><span className="eyebrow">Your reports</span>{mine.map(id => chip(id))}</div>}
+      {samples?.length > 0 && <div className="flex flex-wrap items-center gap-2"><span className="eyebrow">Demo samples</span>{samples.map(s => chip(s.id, s.label))}</div>}
+    </div>
   )
 }
 

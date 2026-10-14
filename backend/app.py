@@ -376,6 +376,19 @@ def sms_inbox(con=Depends(get_con)):
             for r in con.execute("SELECT * FROM sms_outbox ORDER BY id DESC LIMIT 10")]
 
 
+@app.get("/api/demo/samples")
+def demo_samples(con=Depends(get_con)):
+    """Fictional tracking IDs for the demo: one in progress, one awaiting citizen confirmation, one closed."""
+    out = []
+    for label, statuses in (("In progress", ("Acknowledged", "In progress")), ("Awaiting your confirmation", ("Resolved",)),
+                            ("Closed · citizen-verified", ("Closed",))):
+        q = f"SELECT r.id, r.token FROM reports r JOIN issues i ON i.id=r.issue_id WHERE i.status IN ({','.join('?' * len(statuses))})"
+        r = con.execute(q + (" AND i.verified=1" if statuses == ("Closed",) else "") + " ORDER BY r.created_at DESC LIMIT 1", statuses).fetchone()
+        if r:
+            out.append({"label": label, "id": f"{r['id']}-{r['token']}"})
+    return out
+
+
 @app.get("/api/demo/staff")
 def demo_staff(con=Depends(get_con)):
     return [{**staff_out(s), "mobile": s["mobile"], "active": bool(s["active"])}

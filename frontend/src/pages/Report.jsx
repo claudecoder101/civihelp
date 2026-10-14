@@ -3,7 +3,7 @@ import { Link, Navigate } from 'react-router-dom'
 import { Marker, useMap, useMapEvents } from 'react-leaflet'
 import { gsap } from 'gsap'
 import { useGSAP } from '@gsap/react'
-import { api, getCitizen } from '../api'
+import { api, getCitizen, store } from '../api'
 import { reducedMotion, useStagger } from '../anim'
 import { CityMap } from '../map'
 import { Badge, ErrorBox, Icon, Loading, useLang, useMeta } from '../ui'
@@ -37,6 +37,13 @@ function shrinkPhoto(file) {
     img.src = URL.createObjectURL(file)
   })
 }
+
+// One-click demo reports: the same overflowing bin, once in Tamil and once in English, at the same spot.
+const SAMPLE_POS = [11.0005, 76.9790]
+const SAMPLES = [
+  ['தமிழ் மாதிரி', { text: 'ரேஸ் கோர்ஸ் நடைபாதை அருகே குப்பைத் தொட்டி 3 நாட்களாக நிரம்பி வழிகிறது, துர்நாற்றம் வீசுகிறது', category: 'garbage', landmark: 'ரேஸ் கோர்ஸ் நடைபாதை' }],
+  ['English sample', { text: 'Garbage bin overflowing near Race Course walking track for 3 days, bad smell', category: 'garbage', landmark: 'Race Course walking track' }],
+]
 
 export default function Report() {
   const { lang, t } = useLang()
@@ -84,6 +91,7 @@ export default function Report() {
         },
       })
       setDone({ ...res, followed: !!followId })
+      try { const k = `cr_my_${citizen.id}`, old = JSON.parse(store.get(k) || '[]'); store.set(k, JSON.stringify([res.id, ...old.filter(x => x !== res.id)].slice(0, 8))) } catch { /* storage blocked */ }
       window.scrollTo({ top: 0 })
     } catch (e) { setSubmitErr(e) } finally { setSubmitting(null) }
   }
@@ -115,6 +123,13 @@ export default function Report() {
       <header data-stagger className="max-w-3xl">
         <h1 className="ta text-[clamp(1.8rem,3.4vw,2.55rem)] font-bold leading-[1.05] text-ink">{t.title}</h1>
         <p className="ta mt-3 max-w-2xl text-lg text-ink-2">{t.lede}</p>
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <span className="eyebrow">Demo · try a sample</span>
+          {SAMPLES.map(([label, x]) => (
+            <button key={label} type="button" className="chip ta min-h-9 rounded-full px-3.5 text-[14px] font-semibold"
+              onClick={() => { setText(x.text); setCategory(x.category); setLandmark(x.landmark); setPos(SAMPLE_POS) }}>{label}</button>
+          ))}
+        </div>
       </header>
 
       <form onSubmit={e => { e.preventDefault(); submit() }}

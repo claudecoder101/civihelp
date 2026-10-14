@@ -26,7 +26,7 @@
 | 20 | Dispatch trail + Dispatch page + My work + guides | done — 36 tests pass; trail from audit log | see log |
 | 21 | AI match panel | done | see log |
 | 22 | 30% reporter quorum (backend + tests + UI) | done — 38 tests pass; seed reaches quorum | see log |
-| 23 | Try-a-sample buttons (Report, Track) | todo | |
+| 23 | Try-a-sample buttons (Report, Track) | done — full v2 demo passes in Playwright | see log |
 | 24 | Scroll reveals + CSS 3D tilt | todo | |
 | 25 | Playwright run of all v2 flows, fixes, reseed | todo | |
 | 26 | README + API docs + final push | todo | |
