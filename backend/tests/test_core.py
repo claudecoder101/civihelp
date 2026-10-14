@@ -137,3 +137,24 @@ def test_high_confidence_auto_assign_then_live_duplicate(tmp_path, monkeypatch):
     d = c.post("/api/reports/check", json={"text": "Pipeline leak at Vadavalli market, lots of water wasted",
                                            "category": None, "lat": 11.0256, "lng": 76.9031}).json()["duplicates"]
     assert d and d[0]["issue_id"] == a["issue_id"] and d[0]["probable"]
+
+
+def test_public_board_and_reset(tmp_path, monkeypatch):
+    monkeypatch.setattr(db, "DB_PATH", str(tmp_path / "b.db"))
+    import re
+    import seed
+    from fastapi.testclient import TestClient
+    import app as appmod
+    seed.reset_and_seed().close()
+    c = TestClient(appmod.app)
+    b = c.get("/api/public/board").json()
+    assert len(b["departments"]) == 5 and "contact" not in str(b) and b["totals"]["issues"] > 0
+    assert c.post("/api/admin/reset-demo").status_code == 401
+
+    def login(m):
+        c.post("/api/auth/request-otp", json={"mobile": m})
+        code = re.search(r"\b(\d{6})\b", c.get("/api/demo/sms-inbox").json()[0]["message"]).group(1)
+        return {"Authorization": "Bearer " + c.post("/api/auth/verify-otp", json={"mobile": m, "code": code}).json()["token"]}
+    assert c.post("/api/admin/reset-demo", headers=login("9000000002")).status_code == 403  # officer
+    r = c.post("/api/admin/reset-demo", headers=login("9000000007")).json()  # supervisor
+    assert r["ok"] and r["reports"] == 120

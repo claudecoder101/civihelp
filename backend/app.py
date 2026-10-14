@@ -536,6 +536,56 @@ def hotspots(staff=Depends(current_staff), con=Depends(get_con)):
     return {"points": pts, "table": sorted(table.values(), key=lambda r: -r["reports"])}
 
 
+@app.get("/api/public/board")
+def public_board(con=Depends(get_con)):
+    """Public accountability board: aggregate numbers only — no report text, contacts or officer names."""
+    workflow.escalate_overdue(con)
+    t = now()
+    iss = con.execute("SELECT * FROM issues").fetchall()
+    hours = lambda a, b: (parse(b) - parse(a)).total_seconds() / 3600
+
+    def stats(rows):
+        open_ = [i for i in rows if i["status"] in workflow.OPEN]
+        resolved = [i for i in rows if i["resolved_at"] or i["status"] in ("Resolved", "Closed")]
+        n = len(rows) or 1
+        return {"open": len(open_), "overdue": sum(is_overdue(i, t) for i in open_), "resolved": len(resolved),
+                "verified": sum(i["verified"] == 1 for i in rows),
+                "closure_rate": round(len(resolved) / n, 3), "verified_rate": round(sum(i["verified"] == 1 for i in rows) / n, 3),
+                "median_resolve_h": pct([hours(i["created_at"], i["resolved_at"]) for i in rows if i["resolved_at"]], 0.5),
+                "median_ack_h": pct([hours(i["created_at"], i["acknowledged_at"]) for i in rows if i["acknowledged_at"]], 0.5),
+                "bounces": sum(i["bounce_count"] for i in rows)}
+
+    tot = stats(iss)
+    return {"city": engine.CITY["name"], "generated_at": iso(t),
+            "totals": {"reports": con.execute("SELECT COUNT(*) FROM reports").fetchone()[0], "issues": len(iss),
+                       **{k: tot[k] for k in ("open", "overdue", "closure_rate", "verified_rate", "median_resolve_h")}},
+            "departments": [{"dept_id": d, "dept_name": DEPT_NAMES[d], **stats([i for i in iss if i["dept_id"] == d])}
+                            for d in engine.DEPARTMENTS if d != "triage"],
+            "categories": [{"category": c, "name": engine.CATEGORIES[c][0],
+                            "open": sum(i["category"] == c and i["status"] in workflow.OPEN for i in iss),
+                            "overdue": sum(i["category"] == c and is_overdue(i, t) for i in iss)} for c in engine.CATEGORIES]}
+
+
+@app.post("/api/admin/reset-demo")
+def reset_demo(authorization: str = Header(default="")):
+    # needs its own connection handling: the DB file is replaced, so no request connection may be open
+    with _lock:
+        con = db.connect()
+        try:
+            s = auth.staff_from_token(con, authorization.removeprefix("Bearer ").strip())
+        finally:
+            con.close()
+        if s["role"] not in ("supervisor", "admin"):
+            raise HTTPException(403, "Only a supervisor or admin can reset the demo")
+        import seed
+        con = seed.reset_and_seed()
+        try:
+            return {"ok": True, **{k: con.execute(f"SELECT COUNT(*) FROM {k}").fetchone()[0]
+                                   for k in ("reports", "issues", "events")}}
+        finally:
+            con.close()
+
+
 @app.get("/api/evaluation")
 def evaluation(staff=Depends(current_staff), con=Depends(get_con)):
     try:
