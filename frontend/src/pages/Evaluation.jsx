@@ -10,7 +10,7 @@ export default function Evaluation() {
   if (loading && !e) return <Loading />
   if (error) return <ErrorBox error={error} onRetry={reload} />
   if (!e) return null
-  const dup = DUP_METRICS.map(([k, label]) => ({ label, ai: e.duplicates.ai[k], baseline: e.duplicates.baseline[k] }))
+  const dup = DUP_METRICS.map(([k, label]) => ({ label, ai: e.duplicates.ai?.[k] ?? 0, baseline: e.duplicates.baseline[k] }))
 
   return (
     <div className="rise">
@@ -19,7 +19,7 @@ export default function Evaluation() {
       <p role="note" className="mb-6 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md bg-warn-soft px-4 py-3 text-warn">
         <Icon name="alert" className="size-5" />
         <strong>Synthetic labelled data — not real-world results.</strong>
-        <span>{e.dataset.reports} reports in {e.dataset.issues} true issues.{e.dataset.note ? ` ${e.dataset.note}` : ''}</span>
+        <span>{e.dataset.reports} labelled reports, {e.dataset.issues} live issues.{e.dataset.note ? ` ${e.dataset.note}` : ''}</span>
       </p>
 
       <div className="grid gap-6 xl:grid-cols-2">

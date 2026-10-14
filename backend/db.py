@@ -1,7 +1,9 @@
 """SQLite schema + helpers. Events are append-only (triggers) and SHA-256 hash-chained."""
 import hashlib
+import hmac
 import json
 import os
+import secrets
 import sqlite3
 from datetime import datetime, timedelta, timezone
 
@@ -23,7 +25,7 @@ CREATE TABLE IF NOT EXISTS otps (
 CREATE TABLE IF NOT EXISTS sms_outbox (id INTEGER PRIMARY KEY, to_mobile TEXT, message TEXT, at TEXT);
 CREATE TABLE IF NOT EXISTS reports (
   id TEXT PRIMARY KEY, text TEXT, category TEXT, lat REAL, lng REAL, ward_id INTEGER, landmark TEXT,
-  photo TEXT, contact TEXT, created_at TEXT, issue_id TEXT);
+  photo TEXT, contact TEXT, created_at TEXT, issue_id TEXT, token TEXT);
 CREATE TABLE IF NOT EXISTS issues (
   id TEXT PRIMARY KEY, category TEXT, lat REAL, lng REAL, ward_id INTEGER, dept_id TEXT, status TEXT,
   priority INTEGER DEFAULT 1, created_at TEXT, ack_due TEXT, resolve_due TEXT, acknowledged_at TEXT,
@@ -42,6 +44,20 @@ CREATE TRIGGER IF NOT EXISTS events_no_update BEFORE UPDATE ON events
 CREATE TRIGGER IF NOT EXISTS events_no_delete BEFORE DELETE ON events
   BEGIN SELECT RAISE(ABORT, 'audit events are append-only'); END;
 """
+
+KEY_PATH = os.path.join(os.path.dirname(__file__), ".audit_key")
+
+
+def _audit_key() -> bytes:
+    """Server-held key: an insider who edits rows can't just recompute the chain (HMAC, not bare SHA-256)."""
+    if os.environ.get("CIVIC_AUDIT_KEY"):
+        return os.environ["CIVIC_AUDIT_KEY"].encode()
+    if not os.path.exists(KEY_PATH):
+        with open(KEY_PATH, "w") as f:
+            f.write(secrets.token_hex(32))
+    with open(KEY_PATH) as f:
+        return f.read().strip().encode()
+
 
 HASH_FIELDS = ("issue_id", "report_id", "kind", "from_status", "to_status", "actor", "role",
                "reason", "public_note", "created_at")
@@ -72,7 +88,7 @@ def init(con: sqlite3.Connection):
 
 def event_hash(prev_hash: str, ev: dict) -> str:
     payload = json.dumps([ev.get(k) for k in HASH_FIELDS], ensure_ascii=False)
-    return hashlib.sha256((prev_hash + payload).encode()).hexdigest()
+    return hmac.new(_audit_key(), (prev_hash + payload).encode(), hashlib.sha256).hexdigest()
 
 
 def add_event(con, *, issue_id=None, report_id=None, kind, from_status=None, to_status=None,

@@ -18,7 +18,7 @@ export default function Track() {
       <form className="mt-6 flex max-w-xl flex-wrap items-end gap-3" onSubmit={e => { e.preventDefault(); const v = q.trim().toUpperCase(); if (v) nav(`/track/${v}`) }}>
         <div className="min-w-0 flex-1">
           <label htmlFor="tid" className="label">{t.trackingId}</label>
-          <input id="tid" className="field text-lg font-semibold uppercase tnum" value={q} onChange={e => setQ(e.target.value)} placeholder="CV-0042" autoComplete="off" />
+          <input id="tid" className="field text-lg font-semibold uppercase tnum" value={q} onChange={e => setQ(e.target.value)} placeholder="CV-0042-K7Q2XM" autoComplete="off" />
         </div>
         <button className="btn btn-primary">{t.trackBtn}</button>
       </form>

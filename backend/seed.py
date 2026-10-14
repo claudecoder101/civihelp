@@ -237,8 +237,15 @@ def reset_and_seed():
     con = db.connect()
     db.init(con)
     run(con)
+    for (rid,) in con.execute("SELECT id FROM reports WHERE token IS NULL").fetchall():  # secret tracking suffix
+        con.execute("UPDATE reports SET token=? WHERE id=?", (f"{rng_code(rid)}", rid))
     con.commit()
     return con
+
+
+def rng_code(rid):
+    r = random.Random(f"track-{rid}")  # deterministic so README/demo can quote a seeded tracking ID
+    return "".join(r.choice("ABCDEFGHJKLMNPQRSTUVWXYZ23456789") for _ in range(6))
 
 
 def run(con):

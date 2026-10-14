@@ -146,7 +146,7 @@ function TransitionForm({ issue, to, onDone, onCancel }) {
           <label htmlFor="t-dept" className="label">New owner department <span className="text-bad">*</span></label>
           <select id="t-dept" className="field" value={f.new_dept_id} onChange={set('new_dept_id')} required>
             <option value="">Choose…</option>
-            {meta?.departments.filter(d => d.id !== issue.dept_id).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+            {meta?.departments.filter(d => d.id !== issue.dept_id && d.id !== 'triage').map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
           <p className="mt-1 text-sm text-ink-2">The new department must accept it. Ownership is never left empty.</p>
         </div>

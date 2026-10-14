@@ -29,6 +29,18 @@ class WorkflowError(Exception):
         self.status = status
 
 
+def is_overdue(i, t) -> bool:
+    if i["status"] not in OPEN:
+        return False
+    return parse(i["resolve_due"]) < t or (i["status"] in ("Assigned", "Reopened") and parse(i["ack_due"]) < t)
+
+
+def fresh_ack_due(issue, at):
+    """New owner / reopened case gets a fresh acknowledgement window (not an instantly-overdue old one)."""
+    _, _, ack_h, _ = RULES.get(issue["category"], ("", "", 24, 72))
+    return iso(at + timedelta(hours=ack_h))
+
+
 def allowed_actions(issue, staff) -> list[str]:
     role = staff["role"]
     if role == "officer" and staff["dept_id"] != issue["dept_id"]:
@@ -60,12 +72,12 @@ def transition(con, issue, staff, to, reason=None, public_note=None, closure_rea
     actor, role = staff["name"], staff["role"]
     upd = {}
     if to in ("Rejected", "Reassigned"):
-        if not reason or not new_dept_id or new_dept_id not in DEPARTMENTS or new_dept_id == issue["dept_id"]:
+        if not reason or not new_dept_id or new_dept_id not in DEPARTMENTS or new_dept_id in (issue["dept_id"], "triage"):
             raise WorkflowError(400, "A reason and a different new department are required — the issue can never be left without an owner")
         add_event(con, issue_id=issue["id"], kind="handover", from_status=frm, to_status=to, actor=actor,
                   role=role, reason=f"{reason} → handed to {DEPARTMENTS[new_dept_id][0]}", at=at)
         upd = {"dept_id": new_dept_id, "status": "Assigned", "bounce_count": issue["bounce_count"] + 1,
-               "acknowledged_at": None}
+               "acknowledged_at": None, "ack_due": fresh_ack_due(issue, at), "escalated": 0}
         to = "Assigned"
         msg = f"Your complaint was transferred to {DEPARTMENTS[new_dept_id][0]}."
     else:
@@ -104,8 +116,8 @@ def citizen_confirm(con, issue, report_id, fixed: bool, note=None, at=None):
         con.execute("UPDATE issues SET status='Closed', closed_at=?, verified=1 WHERE id=?", (iso(at), issue["id"]))
         notify(con, issue["id"], "A citizen confirmed the issue is fixed. Closed.", at)
     else:
-        con.execute("UPDATE issues SET status='Reopened', verified=0, resolved_at=NULL, priority=priority+1 WHERE id=?",
-                    (issue["id"],))
+        con.execute("UPDATE issues SET status='Reopened', verified=0, resolved_at=NULL, priority=priority+1, "
+                    "ack_due=?, escalated=0 WHERE id=?", (fresh_ack_due(issue, at), issue["id"]))
         notify(con, issue["id"], "Reopened: a citizen reported it is not fixed. Sent back to the department.", at)
 
 

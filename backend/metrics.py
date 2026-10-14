@@ -121,32 +121,34 @@ def test_rows(con):
 
 
 def evaluate(con) -> dict:
-    key = con.execute("SELECT COUNT(*) FROM reports").fetchone()[0]
-    if key in _cache:
-        return _cache[key]
-    rows, times = test_rows(con)
-    cands = _candidates(rows, times)
+    key = con.execute("SELECT COUNT(*) FROM labels").fetchone()[0]  # labelled set is static → cache the slow part
     ai = engine.ai_available()
+    if (key, ai) not in _cache:
+        rows, times = test_rows(con)
+        cands = _candidates(rows, times)
+        _cache[(key, ai)] = {
+            "note": f"Synthetic labelled data (fictional Coimbatore pilot) — not real-world results. "
+                    f"Test split: {len(rows)} reports / {len({r['true_cluster'] for r in rows})} clusters.",
+            "routing": routing(rows),
+            "duplicates": {"ai": duplicates(rows, times, "ai", cands) if ai else None,
+                           "baseline": duplicates(rows, times, "baseline", cands)}}
+    static = _cache[(key, ai)]
 
     hours = sorted((db.parse(i["resolved_at"]) - db.parse(i["created_at"])).total_seconds() / 3600
                    for i in con.execute("SELECT created_at, resolved_at FROM issues WHERE resolved_at IS NOT NULL"))
     p90 = statistics.quantiles(hours, n=10, method="inclusive")[8] if len(hours) > 1 else (hours[0] if hours else None)
     now = db.now()
-    open_ = con.execute(f"SELECT resolve_due FROM issues WHERE status IN ({','.join('?' * len(workflow.OPEN))})",
+    open_ = con.execute(f"SELECT * FROM issues WHERE status IN ({','.join('?' * len(workflow.OPEN))})",
                         workflow.OPEN).fetchall()
-    overdue = sum(db.parse(i["resolve_due"]) < now for i in open_)
+    overdue = sum(workflow.is_overdue(i, now) for i in open_)
 
-    result = {
+    return {
         "dataset": {"reports": key, "issues": con.execute("SELECT COUNT(*) FROM issues").fetchone()[0],
-                    "note": f"Synthetic labelled data (fictional Coimbatore pilot) — not real-world results. "
-                            f"Test split: {len(rows)} reports / {len({r['true_cluster'] for r in rows})} clusters."},
-        "routing": routing(rows),
-        "duplicates": {"ai": duplicates(rows, times, "ai", cands) if ai else None,
-                       "baseline": duplicates(rows, times, "baseline", cands)},
+                    "note": static["note"]},
+        "routing": static["routing"],
+        "duplicates": static["duplicates"],
         "latency": {"median_h": round(statistics.median(hours), 1) if hours else None,
                     "p90_h": round(p90, 1) if p90 is not None else None},
         "overdue_rate": round(overdue / len(open_), 3) if open_ else 0.0,
         "model": "intfloat/multilingual-e5-small (offline)" if ai else "TF-IDF char n-gram baseline (AI model unavailable)",
     }
-    _cache[key] = result
-    return result

@@ -10,7 +10,7 @@ from datetime import timedelta
 from db import add_event, iso, now, parse
 
 SECRET = os.environ.get("CIVIC_SECRET") or secrets.token_hex(32)  # tokens reset on restart if unset
-OTP_TTL, RESEND_COOLDOWN, MAX_ATTEMPTS, LOCK_MIN, SESSION_H = 300, 30, 3, 10, 8
+OTP_TTL, RESEND_COOLDOWN, MAX_ATTEMPTS, MAX_FAILS, LOCK_MIN, SESSION_H = 300, 30, 3, 5, 10, 8
 
 
 class AuthError(Exception):
@@ -71,16 +71,18 @@ def verify_otp(con, mobile, code):
     if parse(o["expires_at"]) < t:
         raise AuthError(401, "OTP expired — request a new one")
     if not hmac.compare_digest(o["code_hash"], _hash(mobile, (code or "").strip())):
-        attempts = o["attempts"] + 1
-        if attempts >= MAX_ATTEMPTS:
+        attempts, fails = o["attempts"] + 1, (o["fails"] or 0) + 1
+        con.execute("UPDATE otps SET fails=? WHERE mobile=?", (fails, mobile))  # survives new OTP requests
+        if attempts >= MAX_ATTEMPTS or fails >= MAX_FAILS:
+            con.execute("UPDATE otps SET fails=0 WHERE mobile=?", (mobile,))
             con.execute("UPDATE otps SET attempts=0, code_hash=NULL, locked_until=? WHERE mobile=?",
                         (iso(t + timedelta(minutes=LOCK_MIN)), mobile))
-            add_event(con, kind="login_locked", actor=s["name"], role=s["role"], reason="3 wrong OTPs — account locked")
+            add_event(con, kind="login_locked", actor=s["name"], role=s["role"], reason="Too many wrong OTPs — account locked")
             raise AuthError(423, f"Too many wrong OTPs — locked for {LOCK_MIN} minutes")
         con.execute("UPDATE otps SET attempts=? WHERE mobile=?", (attempts, mobile))
         add_event(con, kind="login_failed", actor=s["name"], role=s["role"], reason="Wrong OTP")
         raise AuthError(401, f"Wrong OTP — {MAX_ATTEMPTS - attempts} attempt(s) left")
-    con.execute("UPDATE otps SET code_hash=NULL, attempts=0 WHERE mobile=?", (mobile,))  # one-time use
+    con.execute("UPDATE otps SET code_hash=NULL, attempts=0, fails=0 WHERE mobile=?", (mobile,))  # one-time use
     add_event(con, kind="login", actor=s["name"], role=s["role"], reason="Logged in with registered mobile + OTP")
     return make_token(s["id"]), s
 

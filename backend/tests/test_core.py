@@ -103,3 +103,20 @@ def test_otp_login_flow(con):
         auth.verify_otp(con, "9000000001", code)
     with pytest.raises(auth.AuthError):
         auth.staff_from_token(con, token[:-1] + ("1" if token[-1] == "0" else "0"))
+
+
+def test_security_regressions(tmp_path, monkeypatch):
+    monkeypatch.setattr(db, "DB_PATH", str(tmp_path / "s.db"))
+    import seed
+    from fastapi.testclient import TestClient
+    import app as appmod
+    seed.reset_and_seed().close()
+    c = TestClient(appmod.app)
+    for p in ["/C:/Windows/win.ini", "/%2e%2e/%2e%2e/backend/db.py", "/..%5c..%5cbackend%5cdb.py"]:
+        assert b"sqlite3" not in c.get(p).content and b"[fonts]" not in c.get(p).content
+    sub = c.post("/api/reports", json={"text": "Streetlight not working near the park", "lat": 11.02, "lng": 76.96}).json()
+    rid = sub["id"].rsplit("-", 1)[0]
+    assert c.get(f"/api/reports/{rid}").status_code == 404  # bare sequential ID is not enough
+    assert c.get(f"/api/reports/{sub['id']}").status_code == 200
+    assert c.post("/api/reports", json={"text": "bad photo upload", "lat": 11.02, "lng": 76.96,
+                                         "photo_base64": "aGVsbG8="}).status_code == 400

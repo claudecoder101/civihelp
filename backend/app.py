@@ -1,6 +1,7 @@
 """CivicResolve API. Run: uvicorn app:app --port 8000 (from backend/)."""
 import base64
 import os
+import secrets
 import threading
 from datetime import timedelta
 
@@ -70,10 +71,7 @@ WARD_NAMES = {w[0]: w[1] for w in engine.WARDS}
 DEPT_NAMES = {k: v[0] for k, v in engine.DEPARTMENTS.items()}
 
 
-def is_overdue(i, t):
-    if i["status"] not in workflow.OPEN:
-        return False
-    return parse(i["resolve_due"]) < t or (i["status"] in ("Assigned", "Reopened") and parse(i["ack_due"]) < t)
+is_overdue = workflow.is_overdue
 
 
 def report_count(con, issue_id):
@@ -94,6 +92,20 @@ def get_issue(con, issue_id):
     if not i:
         raise HTTPException(404, "Issue not found")
     return i
+
+
+def new_tracking_code():
+    return "".join(secrets.choice("ABCDEFGHJKLMNPQRSTUVWXYZ23456789") for _ in range(6))
+
+
+def get_tracked(con, tracking_id):
+    """Public access needs the full tracking ID (CV-0042-K7Q2XM): the secret suffix stops anyone
+    enumerating sequential IDs to read, confirm or reopen other people's complaints."""
+    rid, _, code = tracking_id.upper().strip().rpartition("-")
+    r = con.execute("SELECT * FROM reports WHERE id=?", (rid,)).fetchone() if rid else None
+    if not r or not r["token"] or not secrets.compare_digest(r["token"], code):
+        raise HTTPException(404, "No complaint with this tracking ID")
+    return r
 
 
 def get_report(con, report_id):
@@ -147,8 +159,8 @@ class CheckIn(BaseModel):
 class ReportIn(CheckIn):
     landmark: str | None = Field(default=None, max_length=200)
     contact: str | None = Field(default=None, max_length=100)
-    photo_base64: str | None = None
-    follow_issue_id: str | None = None
+    photo_base64: str | None = Field(default=None, max_length=7_000_000)  # ~5 MB image
+    follow_issue_id: str | None = Field(default=None, max_length=30)
 
 
 class ConfirmIn(BaseModel):
@@ -164,27 +176,30 @@ class OtpIn(MobileIn):
     code: str = Field(max_length=10)
 
 
+Short = Field(default=None, max_length=1000)
+
+
 class CreateIssueIn(BaseModel):
-    dept_id: str
-    note: str | None = None
+    dept_id: str = Field(max_length=30)
+    note: str | None = Short
 
 
 class LinkIn(BaseModel):
-    issue_id: str
-    reason: str | None = None
+    issue_id: str = Field(max_length=30)
+    reason: str | None = Short
 
 
 class UnlinkIn(BaseModel):
-    reason: str = Field(min_length=3)
+    reason: str = Field(min_length=3, max_length=1000)
 
 
 class TransitionIn(BaseModel):
-    to: str
-    reason: str | None = None
-    public_note: str | None = None
-    closure_reason: str | None = None
-    evidence: str | None = None
-    new_dept_id: str | None = None
+    to: str = Field(max_length=30)
+    reason: str | None = Short
+    public_note: str | None = Short
+    closure_reason: str | None = Field(default=None, max_length=60)
+    evidence: str | None = Short
+    new_dept_id: str | None = Field(default=None, max_length=30)
 
 
 def check_category(c):
@@ -214,34 +229,37 @@ def submit(body: ReportIn, con=Depends(get_con)):
     t = now()
     rid = next_id(con, "reports", "CV")
     w = engine.ward_for(body.lat, body.lng)
-    photo = None
-    if body.photo_base64:
-        data = base64.b64decode(body.photo_base64.split(",")[-1], validate=False)
-        if len(data) > 5_000_000:
-            raise HTTPException(413, "Photo must be under 5 MB")
-        photo = f"{rid}.jpg"
-        with open(os.path.join(UPLOADS, photo), "wb") as f:
-            f.write(data)
     issue = None
     if body.follow_issue_id:
         issue = get_issue(con, body.follow_issue_id)
         if issue["status"] == "Closed":
             raise HTTPException(400, "That issue is already closed — please submit a new report")
-    con.execute("INSERT INTO reports (id, text, category, lat, lng, ward_id, landmark, photo, contact, created_at, issue_id) "
-                "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+    photo = None
+    if body.photo_base64:
+        data = base64.b64decode(body.photo_base64.split(",")[-1], validate=False)
+        if len(data) > 5_000_000:
+            raise HTTPException(413, "Photo must be under 5 MB")
+        if not (data.startswith(b"\xff\xd8\xff") or data.startswith(b"\x89PNG")):
+            raise HTTPException(400, "Photo must be a JPEG or PNG image")
+        photo = f"{rid}-{secrets.token_hex(8)}.jpg"  # unguessable URL: photos may show homes/people
+        with open(os.path.join(UPLOADS, photo), "wb") as f:
+            f.write(data)
+    code = new_tracking_code()
+    con.execute("INSERT INTO reports (id, text, category, lat, lng, ward_id, landmark, photo, contact, created_at, issue_id, token) "
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
                 (rid, body.text.strip(), body.category, body.lat, body.lng, w[0], body.landmark, photo, body.contact,
-                 iso(t), issue["id"] if issue else None))
+                 iso(t), issue["id"] if issue else None, code))
     add_event(con, report_id=rid, kind="report_submitted", to_status="Triage", actor=f"Citizen ({rid})",
               role="resident", public_note="Complaint received", at=t)
     con.execute("INSERT INTO notifications (report_id, message, at) VALUES (?,?,?)",
-                (rid, f"Received. Your tracking ID is {rid}.", iso(t)))
+                (rid, f"Received. Your tracking ID is {rid}-{code}.", iso(t)))
     if issue:
         _link(con, rid, issue, "Citizen (self-linked)", "resident", "Citizen chose to follow an existing issue", t)
         steps = (f"You are now following issue {issue['id']} ({report_count(con, issue['id'])} citizens reported it). "
                  "You will get every update on it.")
     else:
         steps = "A triage officer will confirm the right department, usually within a few hours. Track it any time with your ID."
-    return {"id": rid, "status": issue["status"] if issue else "Triage", "ward": {"id": w[0], "name": w[1]},
+    return {"id": f"{rid}-{code}", "status": issue["status"] if issue else "Triage", "ward": {"id": w[0], "name": w[1]},
             "next_steps": steps, "issue_id": issue["id"] if issue else None}
 
 
@@ -260,14 +278,14 @@ def _link(con, rid, issue, actor, role, reason, t=None):
 
 @app.get("/api/reports/{rid}")
 def track(rid: str, con=Depends(get_con)):
-    r = get_report(con, rid)
+    r = get_tracked(con, rid)
     workflow.escalate_overdue(con)
     i = con.execute("SELECT * FROM issues WHERE id=?", (r["issue_id"],)).fetchone() if r["issue_id"] else None
-    ev = con.execute("SELECT * FROM events WHERE report_id=? AND kind='report_submitted'", (r["id"],)).fetchall()
+    ev = con.execute("SELECT * FROM events WHERE report_id=? AND kind IN ('report_submitted','submitted')", (r["id"],)).fetchall()
     if i:
-        ev += con.execute("SELECT * FROM events WHERE issue_id=? AND kind IN ('assigned','status','handover','escalation','citizen') "
+        ev += con.execute("SELECT * FROM events WHERE issue_id=? AND kind IN ('assigned','created','status','handover','escalation','citizen') "
                           "ORDER BY id", (i["id"],)).fetchall()
-    return {"id": r["id"], "text": r["text"], "category": r["category"], "ward": WARD_NAMES.get(r["ward_id"]),
+    return {"id": f"{r['id']}-{r['token']}", "text": r["text"], "category": r["category"], "ward": WARD_NAMES.get(r["ward_id"]),
             "landmark": r["landmark"], "created_at": r["created_at"], "status": i["status"] if i else "Triage",
             "issue": i and {"id": i["id"], "dept_name": DEPT_NAMES.get(i["dept_id"]), "status": i["status"],
                             "report_count": report_count(con, i["id"]), "ack_due": i["ack_due"], "resolve_due": i["resolve_due"],
@@ -283,7 +301,7 @@ def track(rid: str, con=Depends(get_con)):
 
 @app.post("/api/reports/{rid}/confirm")
 def confirm(rid: str, body: ConfirmIn, con=Depends(get_con)):
-    r = get_report(con, rid)
+    r = get_tracked(con, rid)
     if not r["issue_id"]:
         raise HTTPException(400, "This complaint is still in triage")
     workflow.citizen_confirm(con, get_issue(con, r["issue_id"]), r["id"], body.fixed, body.note)
@@ -360,8 +378,8 @@ def unlinked_report(con, rid):
 def create_issue(rid: str, body: CreateIssueIn, staff=Depends(require("triage", "supervisor", "admin")),
                  con=Depends(get_con)):
     r = unlinked_report(con, rid)
-    if body.dept_id not in engine.DEPARTMENTS:
-        raise HTTPException(400, "Unknown department")
+    if body.dept_id not in engine.DEPARTMENTS or body.dept_id == "triage":
+        raise HTTPException(400, "Choose the department that will own and fix this issue")
     cat = r["category"] or next((c for c, rule in engine.RULES.items() if rule[0] == body.dept_id), None)
     t, start = now(), parse(r["created_at"])  # SLA clock starts when the citizen reported
     ack_due, res_due, why = workflow.sla_for(cat, start)
@@ -518,5 +536,8 @@ if os.path.isdir(DIST):
 
     @app.get("/{path:path}")
     def spa(path: str, request: Request):
-        f = os.path.join(DIST, path)
-        return FileResponse(f if path and os.path.isfile(f) else os.path.join(DIST, "index.html"))
+        root = os.path.realpath(DIST)
+        f = os.path.realpath(os.path.join(root, path))
+        if not f.startswith(root + os.sep) or not os.path.isfile(f):  # never serve files outside dist/
+            f = os.path.join(root, "index.html")
+        return FileResponse(f)

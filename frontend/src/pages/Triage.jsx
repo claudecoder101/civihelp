@@ -29,7 +29,7 @@ export default function Triage() {
 
 function TriageCard({ item, meta, onDone }) {
   const { report: r, routing, duplicates } = item
-  const [dept, setDept] = useState(routing[0]?.dept_id ?? '')
+  const [dept, setDept] = useState(routing[0]?.dept_id && routing[0].dept_id !== 'triage' ? routing[0].dept_id : '')
   const [busy, setBusy] = useState(null)
   const [err, setErr] = useState(null)
   const needsReview = !routing.length || routing[0].tier === 'low'
@@ -57,7 +57,7 @@ function TriageCard({ item, meta, onDone }) {
           <div className="flex flex-wrap gap-2">
             <select id={`d-${r.id}`} className="field min-w-0 flex-1" value={dept} onChange={e => setDept(e.target.value)}>
               <option value="" disabled>Choose department…</option>
-              {meta?.departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+              {meta?.departments.filter(d => d.id !== 'triage').map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
             </select>
             <button className="btn btn-primary" disabled={!dept || !!busy}
               onClick={() => act('create', `/api/triage/${r.id}/create-issue`, { dept_id: String(dept), note: null },

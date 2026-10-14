@@ -8,6 +8,6 @@ ev = con.execute("SELECT id, reason FROM events WHERE kind='status' AND to_statu
 if not ev:
     raise SystemExit("No resolved event to tamper with")
 con.execute("DROP TRIGGER IF EXISTS events_no_update")  # bypass the app's append-only guard
-con.execute("UPDATE events SET reason='Repaired', created_at=datetime('now') WHERE id=?", (ev["id"],))
+con.execute("UPDATE events SET reason='Repaired', created_at=? WHERE id=?", (db.iso(db.now()), ev["id"]))
 con.commit()
 print(f"Tampered with audit event #{ev['id']} (was: {ev['reason']!r}). Now press 'Verify chain'.")
