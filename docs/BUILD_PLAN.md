@@ -14,11 +14,13 @@
 | 8 | Visual check + finish UI redesign | done — 12 pages × desktop+mobile, no overflow/errors; fixed eval mobile overflow; offline map verified (?offline) | 00f100a |
 | 9 | Red-team attack (judge + attacker) and fixes | todo | |
 | 10 | Full demo-script run in built-in browser + speed check | todo | |
-| 11 | Name decided → rename to Civihelp + logo | doing — renamed; logo todo | |
+| 11 | Name decided → rename to Civihelp + logo | done — pin+check logo (favicon + header) | see log |
 | 12 | README (setup, features, metrics, Credits & AI disclosure) | todo | |
 | 13 | Public GitHub push | todo — needs user OK | |
 | 14 | PPT | todo — last, per user | |
 | 15 | Rehearsal fixes + backup video notes | todo | |
+
+**Decisions (15 Oct, 01:05):** ask user before each WP · WP9 red-team inline by main session · WP14 = claude.ai Slides artifact · README screenshots captured by Claude via built-in browser.
 
 ## Work packets
 

@@ -226,7 +226,7 @@ export const useLang = () => useContext(LangCtx)
 export function Wordmark({ sub }) {
   return (
     <Link to="/" className="flex items-center gap-2.5 rounded">
-      <span className="grid size-9 place-items-center rounded-md bg-navy text-white"><Icon name="check" className="size-5" /></span>
+      <img src="/favicon.svg" alt="" className="size-9" />
       <span className="leading-tight">
         <span className="display block text-[19px] font-bold tracking-tight text-ink">{APP_NAME}</span>
         <span className="block text-[12.5px] text-ink-2">{sub}</span>
