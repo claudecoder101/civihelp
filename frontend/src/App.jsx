@@ -1,122 +1,80 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { lazy, Suspense } from 'react'
+import { BrowserRouter, Navigate, NavLink, Outlet, Route, Routes } from 'react-router-dom'
+import { Icon, LangProvider, Loading, useLang, Wordmark } from './ui'
+import Report from './pages/Report'
+import Track from './pages/Track'
 
-function App() {
-  const [count, setCount] = useState(0)
+const StaffLogin = lazy(() => import('./pages/StaffLogin'))
+const StaffLayout = lazy(() => import('./pages/StaffLayout'))
+const Triage = lazy(() => import('./pages/Triage'))
+const Issues = lazy(() => import('./pages/Issues'))
+const IssueDetail = lazy(() => import('./pages/IssueDetail'))
+const Dashboard = lazy(() => import('./pages/Dashboard'))
+const Hotspots = lazy(() => import('./pages/Hotspots'))
+const Evaluation = lazy(() => import('./pages/Evaluation'))
+const Audit = lazy(() => import('./pages/Audit'))
 
+function PublicLayout() {
+  const { lang, setLang, t } = useLang()
+  const nav = ({ isActive }) => `rounded px-3 py-2 text-[15px] font-semibold ${isActive ? 'bg-navy-soft text-navy' : 'text-ink-2 hover:text-ink'}`
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <div className="min-h-dvh">
+      <div className="tricolour" aria-hidden />
+      <div className="bg-bad text-white">
+        <p className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-3 gap-y-0.5 px-4 py-1.5 text-sm">
+          <Icon name="phone" className="size-4" />
+          <a href="tel:112" className="font-bold underline underline-offset-2">{t.emergency}</a>
+          <span className="opacity-90">{t.emergencyNote}</span>
+        </p>
+      </div>
+      <header className="bg-card">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
+          <Wordmark sub="Coimbatore · civic issues pilot" />
+          <nav className="flex flex-wrap items-center gap-1 md:ml-auto" aria-label="Main">
+            <NavLink to="/" end className={nav}>{t.report}</NavLink>
+            <NavLink to="/track" className={nav}>{t.track}</NavLink>
+            <NavLink to="/staff" className={nav}>{t.staff}</NavLink>
+          </nav>
+          <div role="group" aria-label="Language" className="flex rounded-md bg-sunk p-0.5 max-md:ml-auto">
+            {[['en', 'EN'], ['ta', 'தமிழ்']].map(([k, label]) => (
+              <button key={k} onClick={() => setLang(k)} aria-pressed={lang === k}
+                className={`min-h-9 rounded px-3 text-sm font-semibold ${lang === k ? 'bg-card text-navy shadow-sm' : 'text-ink-2'}`}>{label}</button>
+            ))}
+          </div>
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+      </header>
+      <main className="mx-auto max-w-6xl px-4 pb-16 pt-8"><Outlet /></main>
+      <footer className="mx-auto max-w-6xl px-4 pb-10 text-sm text-ink-2">
+        CivicResolve demo pilot. Fictional wards and staff. Map data © OpenStreetMap contributors.
+      </footer>
+    </div>
   )
 }
 
-export default App
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Suspense fallback={<div className="mx-auto max-w-6xl px-4"><Loading /></div>}>
+        <Routes>
+          <Route element={<LangProvider><PublicLayout /></LangProvider>}>
+            <Route index element={<Report />} />
+            <Route path="track" element={<Track />} />
+            <Route path="track/:id" element={<Track />} />
+          </Route>
+          <Route path="staff/login" element={<StaffLogin />} />
+          <Route path="staff" element={<StaffLayout />}>
+            <Route index element={<Navigate to="triage" replace />} />
+            <Route path="triage" element={<Triage />} />
+            <Route path="issues" element={<Issues />} />
+            <Route path="issues/:id" element={<IssueDetail />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="hotspots" element={<Hotspots />} />
+            <Route path="evaluation" element={<Evaluation />} />
+            <Route path="audit" element={<Audit />} />
+          </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
+    </BrowserRouter>
+  )
+}
