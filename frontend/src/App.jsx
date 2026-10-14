@@ -19,7 +19,7 @@ const Audit = lazy(() => import('./pages/Audit'))
 
 function PublicLayout() {
   const { lang, setLang, t } = useLang()
-  const nav = ({ isActive }) => `relative whitespace-nowrap rounded-md px-3 py-2 text-[15px] font-semibold transition-colors ${isActive ? 'bg-navy-soft text-navy' : 'text-ink-2 hover:bg-sunk hover:text-ink'}`
+  const nav = ({ isActive }) => `nav-link relative whitespace-nowrap rounded-md px-3 py-2 text-[15px] font-semibold transition-colors ${isActive ? 'bg-navy-soft text-navy' : 'text-ink-2 hover:bg-sunk hover:text-ink'}`
   return (
     <div className="flex min-h-dvh flex-col">
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-[2000] focus:rounded focus:bg-card focus:px-3 focus:py-2">Skip to content</a>

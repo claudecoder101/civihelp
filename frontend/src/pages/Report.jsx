@@ -131,7 +131,7 @@ export default function Report() {
                 const on = category === c.id
                 return (
                   <button type="button" key={c.id} aria-pressed={on} onClick={() => setCategory(on ? null : c.id)}
-                    className={`ta min-h-10 rounded-full px-4 text-[15px] font-semibold transition-colors ${on ? 'bg-navy text-white' : 'bg-sunk text-ink hover:bg-[#dde3e0]'}`}>
+                    className={`ta min-h-10 rounded-full px-4 text-[15px] font-semibold transition-colors ${on ? 'chip chip-on' : 'chip'}`}>
                     {lang === 'ta' ? c.name_ta : c.name}
                   </button>
                 )
@@ -284,7 +284,7 @@ function DupCard({ d, mine, t, busy, following, onFollow }) {
         <div data-factor className="rounded-lg bg-card px-2 py-2.5">
           <dt className="ta text-[12px] font-semibold text-ink-2">{t.meaning}</dt>
           <dd className="display text-2xl font-bold tnum text-ink">{meaning}%</dd>
-          <div className="mx-auto mt-1 h-1.5 w-full max-w-20 overflow-hidden rounded-full bg-sunk" aria-hidden>
+          <div className="bar mx-auto mt-1 h-1.5 w-full max-w-20 overflow-hidden rounded-full" aria-hidden>
             <div data-bar className={`h-full rounded-full ${verdict === 'strong' ? 'bg-ok' : verdict === 'probable' ? 'bg-warn' : 'bg-ink-2'}`} style={{ width: `${meaning}%` }} />
           </div>
         </div>

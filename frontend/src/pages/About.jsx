@@ -38,11 +38,11 @@ export default function About() {
       <section aria-labelledby="prob-h">
         <h2 id="prob-h" className="text-2xl font-bold">The gap, in real numbers</h2>
         <div className="mt-5 grid gap-4 md:grid-cols-2">
-          <article data-reveal className="card p-6">
+          <article data-reveal className="card lift p-6">
             <p className="display text-5xl font-bold text-navy tnum">90% <span className="text-ink-2">vs</span> <span className="text-bad">22%</span></p>
             <p className="mt-3">Andhra Pradesh PGRS: complaints officially “resolved” vs citizens actually satisfied.</p>
           </article>
-          <article data-reveal className="card p-6">
+          <article data-reveal className="card lift p-6">
             <p className="display text-5xl font-bold text-bad tnum">414 <span className="text-2xl text-ink-2">of 13,552</span></p>
             <p className="mt-3">BMC Mumbai: escalated complaints that were resolved.</p>
           </article>
@@ -54,7 +54,7 @@ export default function About() {
         <h2 id="diff-h" className="text-2xl font-bold">What we do differently</h2>
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
           {different.map(([icon, title, body]) => (
-            <article key={title} data-reveal className="card p-6">
+            <article key={title} data-reveal className="card lift p-6">
               <span className="grid size-10 place-items-center rounded-lg bg-navy-soft text-navy"><Icon name={icon} className="size-5" /></span>
               <h3 className="mt-4 text-xl font-bold">{title}</h3>
               <p className="mt-2 text-ink-2">{body}</p>

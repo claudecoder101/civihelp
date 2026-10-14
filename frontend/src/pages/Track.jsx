@@ -43,7 +43,7 @@ function Stepper({ status, t }) {
         const state = i < cur ? 'done' : i === cur ? 'now' : 'todo'
         return (
           <li key={label} aria-current={state === 'now' ? 'step' : undefined} className="min-w-0">
-            <div className={`h-2 rounded-full ${state === 'todo' ? 'bg-sunk' : status === 'Reopened' && state === 'now' ? 'bg-bad' : 'bg-navy'}`} />
+            <div className={`h-2 rounded-full ${state === 'todo' ? 'bar' : status === 'Reopened' && state === 'now' ? 'bg-bad' : 'bg-navy'}`} />
             <p className={`ta mt-2 text-[12.5px] leading-tight sm:text-sm ${state === 'now' ? 'whitespace-nowrap font-bold text-ink sm:whitespace-normal' : state === 'done' ? 'text-ink max-sm:sr-only' : 'text-ink-2 max-sm:sr-only'}`}>
               {i === 1 && status === 'Reopened' ? (t.status.Reopened || 'Reopened') : label}
             </p>

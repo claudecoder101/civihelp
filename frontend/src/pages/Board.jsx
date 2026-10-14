@@ -45,7 +45,7 @@ export default function Board() {
                   <span className="ta font-semibold">{label}</span>
                   <CountUp value={v * 100} format={pctFmt} className="display text-4xl font-bold tnum" />
                 </div>
-                <div className="mt-1.5 h-3 overflow-hidden rounded-full bg-sunk" aria-hidden>
+                <div className="bar mt-1.5 h-3 overflow-hidden rounded-full" aria-hidden>
                   <div className={`h-full rounded-full ${color}`} style={{ width: `${v * 100}%` }} />
                 </div>
               </div>
@@ -92,7 +92,7 @@ export default function Board() {
                 <div className={`min-w-0 rounded-md px-2 py-1 ${sort === 'verified' ? 'bg-navy-soft' : ''}`}>
                   <dt className="ta text-[12px] text-ink-2">{t.closedRate} / {t.verifiedRate}</dt>
                   <dd className="tnum font-bold">{Math.round(d.closure_rate * 100)}% <span className="text-ok">/ {Math.round(d.verified_rate * 100)}%</span></dd>
-                  <div className="relative mt-1 h-1.5 rounded-full bg-sunk" aria-hidden>
+                  <div className="bar relative mt-1 h-1.5 rounded-full" aria-hidden>
                     <div className="absolute inset-y-0 left-0 rounded-full bg-navy/35" style={{ width: `${d.closure_rate * 100}%` }} />
                     <div className="absolute inset-y-0 left-0 rounded-full bg-ok" style={{ width: `${d.verified_rate * 100}%` }} />
                   </div>
@@ -109,7 +109,7 @@ export default function Board() {
           {data.categories.map(c => (
             <li key={c.category} className="grid grid-cols-[minmax(0,9rem)_1fr_auto] items-center gap-3 text-sm sm:grid-cols-[12rem_1fr_auto]">
               <span className="truncate font-semibold">{c.name}</span>
-              <div className="relative h-3 rounded-full bg-sunk" aria-hidden>
+              <div className="bar relative h-3 rounded-full" aria-hidden>
                 <div className="absolute inset-y-0 left-0 rounded-full bg-navy/30" style={{ width: `${(c.open / maxCat) * 100}%` }} />
                 <div className="absolute inset-y-0 left-0 rounded-full bg-bad" style={{ width: `${(c.overdue / maxCat) * 100}%` }} />
               </div>

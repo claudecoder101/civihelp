@@ -16,7 +16,8 @@ export const reduced = () => typeof window !== 'undefined' && window.matchMedia?
 export function useEnter(deps = []) {
   const scope = useRef(null)
   useGSAP(() => {
-    if (reduced()) return
+    // Pages render a loader first; skip until the entering children exist.
+    if (reduced() || !scope.current?.querySelector('[data-enter]')) return
     return settle(gsap.from('[data-enter]', { y: 14, opacity: 0, duration: 0.45, ease: 'power3.out', stagger: 0.05, clearProps: 'transform,opacity' }), 1500)
   }, { scope, dependencies: deps, revertOnUpdate: true })
   return scope
