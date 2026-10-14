@@ -32,7 +32,7 @@ Check: `npm run build` clean; no console errors; demo steps 1–8 (PRD §9) clic
 Do: one read-only review as a hostile judge (weak claims, missing requirements, confusing UX) and attacker (auth, privacy, injection). Fix what is real.
 Check: `pytest -q` passes; fixes listed in ≤5 lines.
 
-**WP10: Demo run.** (built-in browser; Playwright plugin disabled)
+**WP10: Demo run.** (Playwright plugin — re-enabled 15 Oct 01:03; built-in browser as fallback)
 Do: built-in browser (get_page_text + JS checks) walks PRD §9 demo end to end; note slow steps (first AI load, evaluation cache).
 Check: two clean runs from fresh `python backend/seed.py`.
 
