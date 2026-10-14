@@ -13,7 +13,7 @@
 | 7 | UI redesign (board, about, offline map, GSAP, reset button) | done (finished in WP8) | a5f20c2 |
 | 8 | Visual check + finish UI redesign | done — 12 pages × desktop+mobile, no overflow/errors; fixed eval mobile overflow; offline map verified (?offline) | 00f100a |
 | 9 | Red-team attack (judge + attacker) and fixes | todo | |
-| 10 | Playwright run of full demo script + speed check | todo | |
+| 10 | Full demo-script run in built-in browser + speed check | todo | |
 | 11 | Name decided → rename (brand.js, engine.APP_NAME, index.html) + logo | todo — waiting on user | |
 | 12 | README (setup, features, metrics, Credits & AI disclosure) | todo | |
 | 13 | Public GitHub push | todo — needs user OK | |
@@ -30,8 +30,8 @@ Check: `npm run build` clean; no console errors; demo steps 1–8 (PRD §9) clic
 Do: one read-only review as a hostile judge (weak claims, missing requirements, confusing UX) and attacker (auth, privacy, injection). Fix what is real.
 Check: `pytest -q` passes; fixes listed in ≤5 lines.
 
-**WP10: Demo run.**
-Do: Playwright plugin walks PRD §9 demo end to end; note slow steps (first AI load, evaluation cache).
+**WP10: Demo run.** (built-in browser; Playwright plugin disabled)
+Do: built-in browser (get_page_text + JS checks) walks PRD §9 demo end to end; note slow steps (first AI load, evaluation cache).
 Check: two clean runs from fresh `python backend/seed.py`.
 
 **WP12: README.** Setup in ≤5 commands, screenshots, architecture, metrics table, demo accounts, limitations, **Credits & Disclosure** (Claude Code / Claude Opus 5.5, ChatGPT brief, e5 model, every library, OSM tiles, research sources).
