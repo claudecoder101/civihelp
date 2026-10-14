@@ -16,12 +16,12 @@
 | 10 | Full demo-script run (Playwright) | done — steps 1–8 pass, no console errors | 2bef1b4 |
 | 11 | Name decided → rename to Civihelp + logo | done — pin+check logo (favicon + header) | see log |
 | 12 | README (setup, features, metrics, Credits & AI disclosure) | moved to WP26 | |
-| 13 | Public GitHub push | doing — user OK 02:15 | |
+| 13 | Public GitHub push | done — github.com/claudecoder101/civihelp | 237a123 |
 | 14 | PPT | todo — after 06:00 | |
 | 15 | Rehearsal fixes | dropped (no video) | |
 | 16 | UI pass: dim theme, glow, glass, chart entrances | done | 0f67239 |
-| 17 | v2 logo (அ + A bubbles) + loading screen + landing + main menu | todo | |
-| 18 | App shell: sidebar + top bar (citizen + staff); remove staff↔public links | todo | |
+| 17 | v2 logo (அ + A bubbles) + loading screen + landing + main menu | done | see log |
+| 18 | App shell: sidebar + top bar (citizen + staff); remove staff↔public links | done | see log |
 | 19 | Demo login: 4 profiles, mock Aadhaar, staff auto-OTP (~3 s, Skip), separation, Your access; reporting needs login | todo | |
 | 20 | Dispatch trail + Dispatch page + My work + guides | todo | |
 | 21 | AI match panel | todo | |

@@ -36,3 +36,7 @@ export async function api(path, { method, body } = {}) {
   }
   return data
 }
+
+/* Demo citizen session (simulated identity — no Aadhaar data is stored). */
+export const getCitizen = () => { try { return JSON.parse(store.get('cr_citizen')) } catch { return null } }
+export const setCitizen = c => store.set('cr_citizen', c ? JSON.stringify(c) : null)

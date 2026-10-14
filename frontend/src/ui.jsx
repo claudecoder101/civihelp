@@ -223,15 +223,75 @@ export function LangProvider({ children }) {
 }
 export const useLang = () => useContext(LangCtx)
 
-export function Wordmark({ sub }) {
+/* Logo: Tamil (அ) and English (A) speech bubbles meet on a navy tile; the check where they meet = one verified issue. */
+export function Logo({ className = 'size-9', animate = false }) {
   return (
-    <Link to="/" className="flex items-center gap-2.5 rounded">
-      <img src="/favicon.svg" alt="" className="size-9" />
+    <svg viewBox="0 0 48 48" className={`${className} ${animate ? 'logo-anim' : ''}`} role="img" aria-label={`${APP_NAME} logo`}>
+      <rect x="1" y="1" width="46" height="46" rx="11" fill="#0b1a36" stroke="#fff" strokeOpacity=".22" />
+      <g className="logo-ta">
+        <path d="M9 11h14a5 5 0 0 1 5 5v7a5 5 0 0 1-5 5h-8l-5 4v-4.2A5 5 0 0 1 5 23v-7a5 5 0 0 1 4-5z" fill="#ff9933" />
+        <text x="16.5" y="23.5" textAnchor="middle" fontSize="11" fontWeight="700" fill="#0b1a36" fontFamily="Noto Sans Tamil, sans-serif">அ</text>
+      </g>
+      <g className="logo-en">
+        <path d="M25 19h14a5 5 0 0 1 5 5v7a5 5 0 0 1-4 4.9V40l-5-4h-10a5 5 0 0 1-5-5v-7a5 5 0 0 1 5-5z" fill="#fff" />
+        <text x="32" y="31.5" textAnchor="middle" fontSize="11" fontWeight="800" fill="#16305f" fontFamily="Public Sans, sans-serif">A</text>
+      </g>
+      <path className="logo-check" pathLength="1" d="M20 24.5l2.6 2.6 5.4-6" fill="none" stroke="#2fbf4a" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+export function Wordmark({ sub, to = '/', light = false }) {
+  return (
+    <Link to={to} className="flex items-center gap-2.5 rounded">
+      <Logo className="size-10 shrink-0" />
       <span className="leading-tight">
-        <span className="display block text-[19px] font-bold tracking-tight text-ink">{APP_NAME}</span>
-        <span className="block text-[12.5px] text-ink-2">{sub}</span>
+        <span className={`display block text-[19px] font-bold tracking-tight ${light ? 'text-white' : 'text-ink'}`}>{APP_NAME}</span>
+        {sub && <span className={`block text-[12.5px] ${light ? 'text-white/60' : 'text-ink-2'}`}>{sub}</span>}
       </span>
     </Link>
   )
 }
 
+export function LangToggle({ dark = false }) {
+  const { lang, setLang } = useLang()
+  return (
+    <div role="group" aria-label="Language" className={`flex rounded-lg p-0.5 ${dark ? 'bg-white/10' : 'bg-sunk'}`}>
+      {[['en', 'ENG'], ['ta', 'தமிழ்']].map(([k, label]) => (
+        <button key={k} onClick={() => setLang(k)} aria-pressed={lang === k}
+          className={`min-h-8 rounded-md px-3 text-[13px] font-bold transition-colors ${lang === k ? (dark ? 'bg-white text-[#0b1a36]' : 'bg-card text-navy shadow-sm') : (dark ? 'text-white/70 hover:text-white' : 'text-ink-2 hover:text-ink')}`}>{label}</button>
+      ))}
+    </div>
+  )
+}
+
+
+/* v2 entry flow + shell labels */
+Object.assign(dict.en, {
+  heroEyebrow: 'Coimbatore civic pilot · SDG 11 & 16', heroTitle: 'Report once. Track every step. Confirm it’s fixed.',
+  heroLede: 'Tamil and English reports of the same problem become one issue. Every hand-off between departments is tracked, and it closes only when citizens confirm the fix.',
+  enter: 'Enter', aiMatch: 'AI meaning match', sameIssue: 'Same issue', linkedOne: 'Merged into one issue', tracking: n => `${n} citizens tracking`,
+  trust: ['₹0 · open source', 'Runs offline', 'Tamper-evident log'],
+  menuTitle: 'How are you entering today?', menuLede: 'Choose your side. You can switch language any time.',
+  citizen: 'Citizen', citizenLede: 'Report a problem, follow it between departments, confirm the fix.',
+  citizenPoints: ['Report in Tamil or English', 'See every department hand-off', 'Confirm it’s fixed, or reopen it'],
+  staffSide: 'Staff', staffLede: 'Triage, dispatch and resolve work for your department.',
+  staffPoints: ['Review reports the AI linked across languages', 'Send and receive work between departments', 'Deadlines, escalation and audit log'],
+  continueCitizen: 'Continue as citizen', continueStaff: 'Continue as staff', trackNoLogin: 'Track a report without logging in',
+  myReports: 'My reports', signOut: 'Sign out', mainMenu: 'Main menu', skip: 'Skip',
+  loading: ['தமிழ் + English…', 'Linking reports…', 'Verified ✓'],
+})
+Object.assign(dict.ta, {
+  heroEyebrow: 'கோயம்புத்தூர் குடிமைச் சேவை முன்னோட்டம் · SDG 11 & 16', heroTitle: 'ஒருமுறை புகாரளியுங்கள். ஒவ்வொரு படியையும் கண்காணியுங்கள். சரியானதை உறுதிசெய்யுங்கள்.',
+  heroLede: 'ஒரே பிரச்சினை பற்றிய தமிழ், ஆங்கிலப் புகார்கள் ஒரே பிரச்சினையாக இணைக்கப்படும். துறைகளுக்கு இடையிலான ஒவ்வொரு ஒப்படைப்பும் கண்காணிக்கப்படும்; குடிமக்கள் உறுதிசெய்த பின்பே மூடப்படும்.',
+  enter: 'உள்ளே செல்ல', aiMatch: 'AI பொருள் ஒப்பீடு', sameIssue: 'ஒரே பிரச்சினை', linkedOne: 'ஒரே பிரச்சினையாக இணைக்கப்பட்டது', tracking: n => `${n} பேர் கண்காணிக்கின்றனர்`,
+  trust: ['₹0 · திறந்த மூலம்', 'இணையம் இல்லாமலும் இயங்கும்', 'மாற்ற முடியாத பதிவேடு'],
+  menuTitle: 'இன்று எப்படி உள்நுழைகிறீர்கள்?', menuLede: 'உங்கள் பக்கத்தைத் தேர்ந்தெடுக்கவும். மொழியை எப்போது வேண்டுமானாலும் மாற்றலாம்.',
+  citizen: 'குடிமகன்', citizenLede: 'பிரச்சினையைப் புகாரளித்து, துறைகளுக்கு இடையே பின்தொடர்ந்து, சரியானதை உறுதிசெய்யுங்கள்.',
+  citizenPoints: ['தமிழ் அல்லது ஆங்கிலத்தில் புகாரளிக்கவும்', 'ஒவ்வொரு துறை ஒப்படைப்பையும் பார்க்கவும்', 'சரி செய்யப்பட்டதை உறுதிசெய்யவும் அல்லது மீண்டும் திறக்கவும்'],
+  staffSide: 'அலுவலர்', staffLede: 'உங்கள் துறைக்கான பணிகளைப் பரிசீலித்தல், அனுப்புதல், தீர்த்தல்.',
+  staffPoints: ['AI இணைத்த புகார்களைப் பரிசீலிக்கவும்', 'துறைகளுக்கு இடையே பணியை அனுப்பவும், பெறவும்', 'காலக்கெடு, மேல்முறையீடு, தணிக்கைப் பதிவு'],
+  continueCitizen: 'குடிமகனாகத் தொடர', continueStaff: 'அலுவலராகத் தொடர', trackNoLogin: 'உள்நுழையாமல் புகாரைக் கண்காணிக்க',
+  myReports: 'என் புகார்கள்', signOut: 'வெளியேறு', mainMenu: 'முதன்மை மெனு', skip: 'தவிர்',
+  loading: ['தமிழ் + English…', 'புகார்கள் இணைக்கப்படுகின்றன…', 'உறுதிசெய்யப்பட்டது ✓'],
+})

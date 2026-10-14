@@ -20,6 +20,21 @@ export function useStagger(deps = []) {
   return scope
 }
 
+/* CSS 3D tilt: pointer position → --rx/--ry on the element (see .tilt in index.css). */
+export function useTilt(max = 8) {
+  const ref = useRef(null)
+  const onPointerMove = e => {
+    const el = ref.current
+    if (!el || reducedMotion() || e.pointerType === 'touch') return
+    const r = el.getBoundingClientRect()
+    const x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5
+    el.style.setProperty('--ry', `${(x * max).toFixed(2)}deg`)
+    el.style.setProperty('--rx', `${(-y * max).toFixed(2)}deg`)
+  }
+  const onPointerLeave = () => { ref.current?.style.setProperty('--rx', '0deg'); ref.current?.style.setProperty('--ry', '0deg') }
+  return { ref, onPointerMove, onPointerLeave }
+}
+
 /* Animated number. Renders the final value in the DOM first so it is correct without JS motion. */
 export function CountUp({ value, format = v => Math.round(v).toLocaleString('en-IN'), duration = 1.1, className }) {
   const el = useRef(null)

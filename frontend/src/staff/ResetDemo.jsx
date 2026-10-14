@@ -17,7 +17,7 @@ export default function ResetDemo() {
     try {
       await api('/api/admin/reset-demo', { method: 'POST' })
       setSession(null, null)
-      nav('/staff/login', { replace: true })
+      nav('/login/staff', { replace: true })
     } catch (e) { setErr(e); setBusy(false) }
   }
 

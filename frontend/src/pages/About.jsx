@@ -83,9 +83,8 @@ export default function About() {
         </div>
         <p className="text-ink-2">Accountable institutions and responsive decisions (16.6, 16.7) · basic urban services (11).</p>
         <div className="flex w-full flex-wrap gap-3">
-          <Link to="/" className="btn btn-primary">Report an issue</Link>
+          <Link to="/report" className="btn btn-primary">Report an issue</Link>
           <Link to="/board" className="btn btn-ghost">City Accountability Board</Link>
-          <Link to="/staff/login" className="btn btn-ghost">Staff login</Link>
         </div>
       </section>
     </div>

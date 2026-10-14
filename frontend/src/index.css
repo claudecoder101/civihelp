@@ -113,6 +113,45 @@ body::after { width: 38vw; height: 38vw; bottom: -16vw; left: -10vw; background:
 
 @media (prefers-reduced-motion: reduce) { body::before, body::after { animation: none; } }
 
+/* Loader: bubbles merge, check draws, name settles, tricolour bar fills, status lines step through */
+.loader { position: fixed; inset: 0; z-index: 3000; display: grid; place-items: center; background: #0b1a36; transition: opacity .35s ease, visibility .35s; }
+.loader.out { opacity: 0; visibility: hidden; }
+.loader .logo-ta { animation: ld-l 1.8s ease-out both; }
+.loader .logo-en { animation: ld-r 1.8s ease-out both; }
+.loader .logo-check { stroke-dasharray: 1; animation: ld-chk 1.8s ease-out both; }
+.loader svg { animation: ld-pop 1.8s ease-out both; }
+.loader .ld-name { animation: ld-name 1.8s ease-out both; }
+.loader .ld-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--color-saffron) 0 33.3%, #fff 33.3% 66.6%, var(--color-indgreen) 66.6%); background-size: 180px 100%; animation: ld-fill 1.8s cubic-bezier(.4,0,.2,1) both; }
+.loader .ld-st > span { position: absolute; inset: 0; opacity: 0; }
+.loader .ld-st > span:nth-child(1) { animation: ld-s1 1.8s both; }
+.loader .ld-st > span:nth-child(2) { animation: ld-s2 1.8s both; }
+.loader .ld-st > span:nth-child(3) { animation: ld-s3 1.8s both; color: #7ee08f; }
+@keyframes ld-l { 0%, 8% { transform: translateX(-12px); opacity: 0; } 35%, 100% { transform: none; opacity: 1; } }
+@keyframes ld-r { 0%, 18% { transform: translateX(12px); opacity: 0; } 45%, 100% { transform: none; opacity: 1; } }
+@keyframes ld-chk { 0%, 50% { stroke-dashoffset: 1; } 68%, 100% { stroke-dashoffset: 0; } }
+@keyframes ld-pop { 0%, 50% { transform: scale(1); } 60% { transform: scale(1.07); } 70%, 100% { transform: scale(1); } }
+@keyframes ld-name { 0%, 55% { opacity: 0; letter-spacing: .3em; } 80%, 100% { opacity: 1; letter-spacing: .02em; } }
+@keyframes ld-fill { from { width: 0; } 85%, to { width: 100%; } }
+@keyframes ld-s1 { 0%, 2% { opacity: 0; } 6%, 30% { opacity: 1; } 34%, 100% { opacity: 0; } }
+@keyframes ld-s2 { 0%, 34% { opacity: 0; } 38%, 60% { opacity: 1; } 64%, 100% { opacity: 0; } }
+@keyframes ld-s3 { 0%, 64% { opacity: 0; } 68%, 100% { opacity: 1; } }
+
+/* CSS 3D tilt: JS sets --rx/--ry from the pointer; children with .pop float above the card */
+.tilt { transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transform-style: preserve-3d; transition: transform .25s ease-out; will-change: transform; }
+.tilt .pop { transform: translateZ(36px); }
+.tilt .pop-2 { transform: translateZ(64px); }
+
+/* Hero AI-match card entrance */
+.ai-in-l { animation: ai-l .7s .2s cubic-bezier(.2,.7,.2,1) both; }
+.ai-in-r { animation: ai-r .7s .45s cubic-bezier(.2,.7,.2,1) both; }
+.ai-link { stroke-dasharray: 1; animation: ld-chk 2.2s .4s ease-out both; }
+.ai-badge { animation: ai-pop .5s 1.2s cubic-bezier(.3,1.6,.5,1) both; }
+.ai-merged { animation: ai-up .6s 1.6s ease-out both; }
+@keyframes ai-l { from { opacity: 0; transform: translateX(-28px); } }
+@keyframes ai-r { from { opacity: 0; transform: translateX(28px); } }
+@keyframes ai-pop { from { opacity: 0; transform: scale(.6); } }
+@keyframes ai-up { from { opacity: 0; transform: translateY(14px); } }
+
 /* Public nav: a bar slides in under the hovered link, stays full under the active one */
 .nav-link::after { content: ""; position: absolute; left: .75rem; right: .75rem; bottom: 3px; height: 2px; border-radius: 2px; background: var(--color-navy); transform: scaleX(0); transition: transform .2s ease-out; }
 .nav-link:hover::after, .nav-link[aria-current="page"]::after { transform: scaleX(1); }
@@ -137,3 +176,5 @@ body::after { width: 38vw; height: 38vw; bottom: -16vw; left: -10vw; background:
 /* Staff tables and lists: row hover */
 tbody tr { transition: background-color .15s; }
 tbody tr:hover { background: rgb(22 48 95 / .035); }
+#main h1.text-center::after { margin-inline: auto; }
+h1.ta, h2.ta { line-height: 1.12; }
