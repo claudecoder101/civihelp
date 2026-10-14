@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS otps (
 CREATE TABLE IF NOT EXISTS sms_outbox (id INTEGER PRIMARY KEY, to_mobile TEXT, message TEXT, at TEXT);
 CREATE TABLE IF NOT EXISTS reports (
   id TEXT PRIMARY KEY, text TEXT, category TEXT, lat REAL, lng REAL, ward_id INTEGER, landmark TEXT,
-  photo TEXT, contact TEXT, created_at TEXT, issue_id TEXT, token TEXT);
+  photo TEXT, contact TEXT, created_at TEXT, issue_id TEXT, token TEXT, citizen TEXT);
 CREATE TABLE IF NOT EXISTS issues (
   id TEXT PRIMARY KEY, category TEXT, lat REAL, lng REAL, ward_id INTEGER, dept_id TEXT, status TEXT,
   priority INTEGER DEFAULT 1, created_at TEXT, ack_due TEXT, resolve_due TEXT, acknowledged_at TEXT,

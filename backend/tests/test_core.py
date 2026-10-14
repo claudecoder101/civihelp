@@ -112,6 +112,7 @@ def test_security_regressions(tmp_path, monkeypatch):
     import app as appmod
     seed.reset_and_seed().close()
     c = TestClient(appmod.app)
+    c.headers["X-Citizen-Token"] = c.post("/api/citizen/login", json={"mobile": "+919894021482", "code": "482193"}).json()["token"]
     for p in ["/C:/Windows/win.ini", "/%2e%2e/%2e%2e/backend/db.py", "/..%5c..%5cbackend%5cdb.py"]:
         assert b"sqlite3" not in c.get(p).content and b"[fonts]" not in c.get(p).content
     sub = c.post("/api/reports", json={"text": "Streetlight not working near the park", "lat": 11.02, "lng": 76.96}).json()
@@ -129,6 +130,7 @@ def test_high_confidence_auto_assign_then_live_duplicate(tmp_path, monkeypatch):
     import app as appmod
     seed.reset_and_seed().close()
     c = TestClient(appmod.app)
+    c.headers["X-Citizen-Token"] = c.post("/api/citizen/login", json={"mobile": "+919894021482", "code": "482193"}).json()["token"]
     a = c.post("/api/reports", json={"text": "Water pipe burst near Vadavalli market, water wasting on road",
                                      "category": "water", "lat": 11.0255, "lng": 76.9030}).json()
     assert a["status"] == "Assigned" and a["issue_id"]

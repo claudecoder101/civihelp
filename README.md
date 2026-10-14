@@ -65,7 +65,7 @@ cd ../frontend && npm install && npm run build
 cd .. && backend/.venv/Scripts/python -m uvicorn app:app --app-dir backend --port 8000
 ```
 
-Tests: `cd backend && .venv/Scripts/python -m pytest -q` (38 tests).
+Tests: `cd backend && .venv/Scripts/python -m pytest -q` (40 tests).
 Dev mode with hot reload: run step 5, then `cd frontend && npm run dev` (proxies `/api` to :8000).
 
 ## Demo walkthrough (3 min)
@@ -87,7 +87,7 @@ Dev mode with hot reload: run step 5, then `cd frontend && npm run dev` (proxies
 | R. Kavitha | Staff · Triage Officer | +91 90000 00001 | Triage, route, link duplicates, dashboards, audit |
 | P. Lakshmi Priya | Staff · Solid Waste officer | +91 90000 00003 | Own department's work: receive, resolve, send on |
 
-Other staff in `backend/seed.py` (+91 90000 000xx): Roads, Electrical, Drainage, Water officers, a supervisor and an admin. Staff numbers are refused at citizen login; citizens cannot open staff pages; reporting requires citizen login (anti-spam), tracking by ID does not.
+Other staff in `backend/seed.py` (+91 90000 000xx): Roads, Electrical, Drainage, Water officers, a supervisor and an admin. Staff numbers are refused at citizen login; citizens cannot open staff pages. Reporting, tracking and confirming require a citizen session issued by the server (anti-spam): one confirmation vote per citizen, max 10 reports per citizen per hour.
 
 ## Architecture
 

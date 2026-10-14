@@ -40,8 +40,18 @@ def login(c, mobile):
     return {"Authorization": "Bearer " + r.json()["token"]}
 
 
-def submit(c, text=VAGUE, lat=11.0255, lng=76.9030, **kw):
-    r = c.post("/api/reports", json={"text": text, "lat": lat, "lng": lng, **kw})
+CITIZENS = [("+919894021482", "482193"), ("+919943017356", "735614")]  # demo Priya, Arun
+
+
+def cit(c, who=0):
+    m, code = CITIZENS[who]
+    r = c.post("/api/citizen/login", json={"mobile": m, "code": code})
+    assert r.status_code == 200, r.text
+    return {"X-Citizen-Token": r.json()["token"]}
+
+
+def submit(c, text=VAGUE, lat=11.0255, lng=76.9030, who=0, **kw):
+    r = c.post("/api/reports", json={"text": text, "lat": lat, "lng": lng, **kw}, headers=cit(c, who))
     assert r.status_code == 200, r.text
     return r.json()
 
@@ -56,7 +66,7 @@ def con():
 
 def new_issue(c, h, dept="roads", n_reports=1):
     """Vague reports → triage creates an issue from the first and links the rest. Returns (issue_id, trackings)."""
-    subs = [submit(c, lat=11.0255 + i * 1e-5) for i in range(n_reports)]
+    subs = [submit(c, lat=11.0255 + i * 1e-5, who=i % 2) for i in range(n_reports)]  # alternating citizens
     assert all(s["status"] == "Triage" for s in subs)
     iss = c.post(f"/api/triage/{rid(subs[0]['id'])}/create-issue", json={"dept_id": dept}, headers=h)
     assert iss.status_code == 200, iss.text
@@ -164,11 +174,11 @@ def _resolved_issue(c):
 def test_citizen_confirm_needs_full_tracking_id(c):
     iid, tracking, _ = _resolved_issue(c)
     assert c.get(f"/api/reports/{tracking}").json()["can_confirm"]
-    assert c.post(f"/api/reports/{rid(tracking)}/confirm", json={"fixed": True}).status_code == 404
-    assert c.post(f"/api/reports/{rid(tracking)}-ZZZZZZ/confirm", json={"fixed": True}).status_code == 404
-    r = c.post(f"/api/reports/{tracking}/confirm", json={"fixed": True})
+    assert c.post(f"/api/reports/{rid(tracking)}/confirm", json={"fixed": True}, headers=cit(c, 0)).status_code == 404
+    assert c.post(f"/api/reports/{rid(tracking)}-ZZZZZZ/confirm", json={"fixed": True}, headers=cit(c, 0)).status_code == 404
+    r = c.post(f"/api/reports/{tracking}/confirm", json={"fixed": True}, headers=cit(c, 0))
     assert r.status_code == 200 and r.json()["status"] == "Closed"
-    assert c.post(f"/api/reports/{tracking}/confirm", json={"fixed": False}).status_code == 400  # already closed
+    assert c.post(f"/api/reports/{tracking}/confirm", json={"fixed": False}, headers=cit(c, 0)).status_code == 400  # already closed
 
 
 def test_closure_needs_30_percent_of_reporters(c):
@@ -177,11 +187,11 @@ def test_closure_needs_30_percent_of_reporters(c):
     move(c, iid, o, to="Acknowledged")
     assert move(c, iid, o, to="Resolved", closure_reason="Repaired", evidence="patched").status_code == 200
     assert c.get(f"/api/reports/{tr[0]}").json()["confirmations"] == {"have": 0, "need": 2, "mine": False}
-    r = c.post(f"/api/reports/{tr[0]}/confirm", json={"fixed": True})
+    r = c.post(f"/api/reports/{tr[0]}/confirm", json={"fixed": True}, headers=cit(c, 0))
     assert r.status_code == 200 and r.json()["status"] == "Resolved"  # 1 of 2 — still open
-    assert c.post(f"/api/reports/{tr[0]}/confirm", json={"fixed": True}).status_code == 400  # same reporter twice
+    assert c.post(f"/api/reports/{tr[0]}/confirm", json={"fixed": True}, headers=cit(c, 0)).status_code == 400  # same reporter twice
     assert c.get(f"/api/reports/{tr[1]}").json()["confirmations"]["have"] == 1
-    r = c.post(f"/api/reports/{tr[1]}/confirm", json={"fixed": True})
+    r = c.post(f"/api/reports/{tr[1]}/confirm", json={"fixed": True}, headers=cit(c, 1))
     assert r.status_code == 200 and r.json()["status"] == "Closed"
 
 
@@ -190,9 +200,40 @@ def test_one_dispute_reopens_even_mid_quorum(c):
     o = login(c, ROADS)
     move(c, iid, o, to="Acknowledged")
     move(c, iid, o, to="Resolved", closure_reason="Repaired", evidence="patched")
-    c.post(f"/api/reports/{tr[0]}/confirm", json={"fixed": True})
-    r = c.post(f"/api/reports/{tr[2]}/confirm", json={"fixed": False, "note": "still broken"})
+    c.post(f"/api/reports/{tr[0]}/confirm", json={"fixed": True}, headers=cit(c, 0))
+    r = c.post(f"/api/reports/{tr[2]}/confirm", json={"fixed": False, "note": "still broken"}, headers=cit(c, 0))
     assert r.status_code == 200 and r.json()["status"] == "Reopened"
+
+
+def test_reporting_and_confirming_need_a_citizen_session(c):
+    assert c.post("/api/reports", json={"text": VAGUE, "lat": 11.0255, "lng": 76.9030}).status_code == 401
+    staff = login(c, ROADS)["Authorization"].removeprefix("Bearer ")
+    assert c.post("/api/reports", json={"text": VAGUE, "lat": 11.0255, "lng": 76.9030},
+                  headers={"X-Citizen-Token": staff}).status_code == 401  # staff token is not a citizen token
+    assert c.post("/api/citizen/login", json={"mobile": "+91" + TRIAGE, "code": "000000"}).status_code == 403  # staff number
+    assert c.post("/api/citizen/login", json={"mobile": CITIZENS[0][0], "code": "000000"}).status_code == 401
+    ctok = cit(c, 0)["X-Citizen-Token"]
+    assert c.get("/api/dispatch", headers={"Authorization": "Bearer " + ctok}).status_code == 401  # citizen token is not staff
+    o = {"Authorization": "Bearer " + staff}
+    iid, tr = new_issue(c, login(c, TRIAGE))
+    move(c, iid, o, to="Acknowledged")
+    move(c, iid, o, to="Resolved", closure_reason="Repaired", evidence="patched")
+    assert c.post(f"/api/reports/{tr[0]}/confirm", json={"fixed": True}).status_code == 401
+    assert c.post(f"/api/reports/{tr[0]}/confirm", json={"fixed": True}, headers=cit(c, 1)).status_code == 403  # not Arun's report
+
+
+def test_one_citizen_one_vote_and_rate_limit(c, monkeypatch):
+    t = login(c, TRIAGE)
+    iid, tr = new_issue(c, t, n_reports=4)
+    extra = submit(c, lat=11.0255, who=0)["id"]  # Priya files a second report on the same issue
+    assert c.post(f"/api/triage/{rid(extra)}/link", json={"issue_id": iid}, headers=t).status_code == 200
+    o = login(c, ROADS)
+    move(c, iid, o, to="Acknowledged")
+    move(c, iid, o, to="Resolved", closure_reason="Repaired", evidence="patched")  # 5 reports -> need 2
+    assert c.post(f"/api/reports/{tr[0]}/confirm", json={"fixed": True}, headers=cit(c, 0)).json()["status"] == "Resolved"
+    assert c.post(f"/api/reports/{extra}/confirm", json={"fixed": True}, headers=cit(c, 0)).status_code == 400  # same person
+    monkeypatch.setattr(auth, "REPORTS_PER_HOUR", 2)
+    assert c.post("/api/reports", json={"text": VAGUE, "lat": 11.0255, "lng": 76.9030}, headers=cit(c, 0)).status_code == 429
 
 
 def test_reopen_gives_fresh_ack_deadline_and_is_not_overdue(c):
@@ -201,7 +242,7 @@ def test_reopen_gives_fresh_ack_deadline_and_is_not_overdue(c):
     k.execute("UPDATE issues SET ack_due=? WHERE id=?", (db.iso(db.now() - timedelta(hours=5)), iid))  # old window
     k.commit()
     k.close()
-    r = c.post(f"/api/reports/{tracking}/confirm", json={"fixed": False, "note": "still broken"})
+    r = c.post(f"/api/reports/{tracking}/confirm", json={"fixed": False, "note": "still broken"}, headers=cit(c, 0))
     assert r.status_code == 200 and r.json()["status"] == "Reopened"
     d = c.get(f"/api/issues/{iid}", headers=o).json()
     assert db.parse(d["ack_due"]) > db.now() and not d["overdue"] and not d["escalated"]
@@ -215,7 +256,7 @@ def test_reopen_of_old_issue_is_not_instantly_overdue(c):
     k.execute("UPDATE issues SET ack_due=?, resolve_due=? WHERE id=?", (past, past, iid))
     k.commit()
     k.close()
-    c.post(f"/api/reports/{tracking}/confirm", json={"fixed": False})
+    c.post(f"/api/reports/{tracking}/confirm", json={"fixed": False}, headers=cit(c, 0))
     d = c.get(f"/api/issues/{iid}", headers=o).json()
     assert not d["overdue"] and not d["escalated"]
 

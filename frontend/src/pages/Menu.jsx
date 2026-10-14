@@ -34,7 +34,6 @@ export default function Menu() {
           <Door to="/login/staff" title={t.staffSide} lede={t.staffLede} points={t.staffPoints} cta={t.continueStaff} icon="shield" accent="bg-navy" />
         </div>
         <p className="mt-8 flex flex-wrap justify-center gap-x-6 gap-y-2 text-[15px] font-semibold">
-          <Link to="/track" className="ta text-navy hover:underline">{t.trackNoLogin}</Link>
           <Link to="/board" className="ta text-navy hover:underline">{t.board}</Link>
         </p>
       </main>

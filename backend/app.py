@@ -58,6 +58,10 @@ def current_staff(authorization: str = Header(default=""), con=Depends(get_con))
     return auth.staff_from_token(con, authorization.removeprefix("Bearer ").strip())
 
 
+def current_citizen(x_citizen_token: str = Header(default="")):
+    return auth.citizen_from_token(x_citizen_token)
+
+
 def require(*roles):
     def dep(staff=Depends(current_staff)):
         if staff["role"] not in roles:
@@ -223,10 +227,25 @@ def check(body: CheckIn, con=Depends(get_con)):
     return {"ward": ward, "routing": routing, "duplicates": dups}
 
 
+class CitizenLoginIn(BaseModel):
+    mobile: str = Field(max_length=20)
+    code: str = Field(max_length=10)
+
+
+@app.post("/api/citizen/login")
+def citizen_login(body: CitizenLoginIn, con=Depends(get_con)):
+    token, c = auth.citizen_login(con, body.mobile, body.code)
+    return {"token": token, "citizen": {"id": c["id"], "name": c["name"]}}
+
+
 @app.post("/api/reports")
-def submit(body: ReportIn, con=Depends(get_con)):
+def submit(body: ReportIn, cid=Depends(current_citizen), con=Depends(get_con)):
     check_category(body.category)
     t = now()
+    recent = con.execute("SELECT COUNT(*) FROM reports WHERE citizen=? AND created_at >= ?",
+                         (cid, iso(t - timedelta(hours=1)))).fetchone()[0]
+    if recent >= auth.REPORTS_PER_HOUR:
+        raise HTTPException(429, f"Limit reached: {auth.REPORTS_PER_HOUR} reports per hour per citizen. Please try again later.")
     rid = next_id(con, "reports", "CV")
     w = engine.ward_for(body.lat, body.lng)
     issue = None
@@ -245,10 +264,10 @@ def submit(body: ReportIn, con=Depends(get_con)):
         with open(os.path.join(UPLOADS, photo), "wb") as f:
             f.write(data)
     code = new_tracking_code()
-    con.execute("INSERT INTO reports (id, text, category, lat, lng, ward_id, landmark, photo, contact, created_at, issue_id, token) "
-                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+    con.execute("INSERT INTO reports (id, text, category, lat, lng, ward_id, landmark, photo, contact, created_at, issue_id, token, citizen) "
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (rid, body.text.strip(), body.category, body.lat, body.lng, w[0], body.landmark, photo, body.contact,
-                 iso(t), issue["id"] if issue else None, code))
+                 iso(t), issue["id"] if issue else None, code, cid))
     add_event(con, report_id=rid, kind="report_submitted", to_status="Triage", actor=f"Citizen ({rid})",
               role="resident", public_note="Complaint received", at=t)
     con.execute("INSERT INTO notifications (report_id, message, at) VALUES (?,?,?)",
@@ -316,9 +335,8 @@ def confirm_state(con, i, report_id):
     if not i or i["status"] != "Resolved":
         return None
     have, need = workflow.confirmations(con, i)
-    mine = con.execute("SELECT 1 FROM events WHERE issue_id=? AND report_id=? AND kind='citizen' AND reason LIKE 'Citizen confirmed%' "
-                       "AND created_at >= ?", (i["id"], report_id, i["resolved_at"] or "")).fetchone()
-    return {"have": have, "need": need, "mine": bool(mine)}
+    r = con.execute("SELECT citizen FROM reports WHERE id=?", (report_id,)).fetchone()
+    return {"have": have, "need": need, "mine": workflow.voted(con, i, f"Citizen ({r['citizen'] or report_id})")}
 
 
 def public_trail(trail):
@@ -328,11 +346,13 @@ def public_trail(trail):
 
 
 @app.post("/api/reports/{rid}/confirm")
-def confirm(rid: str, body: ConfirmIn, con=Depends(get_con)):
+def confirm(rid: str, body: ConfirmIn, cid=Depends(current_citizen), con=Depends(get_con)):
     r = get_tracked(con, rid)
+    if r["citizen"] and r["citizen"] != cid:
+        raise HTTPException(403, "Only the citizen who filed this report can confirm or reopen it")
     if not r["issue_id"]:
         raise HTTPException(400, "This complaint is still in triage")
-    workflow.citizen_confirm(con, get_issue(con, r["issue_id"]), r["id"], body.fixed, body.note)
+    workflow.citizen_confirm(con, get_issue(con, r["issue_id"]), r["id"], body.fixed, body.note, voter=r["citizen"])
     return {"ok": True, "status": get_issue(con, r["issue_id"])["status"]}
 
 

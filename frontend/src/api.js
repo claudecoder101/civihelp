@@ -20,6 +20,8 @@ export async function api(path, { method, body } = {}) {
   const headers = { Accept: 'application/json' }
   const token = getToken()
   if (token) headers.Authorization = `Bearer ${token}`
+  const citizen = getCitizen()
+  if (citizen) headers['X-Citizen-Token'] = citizen.token
   if (body !== undefined) headers['Content-Type'] = 'application/json'
   let res
   try {
@@ -31,12 +33,14 @@ export async function api(path, { method, body } = {}) {
   if (!res.ok) {
     let msg = data?.detail
     if (Array.isArray(msg)) msg = msg.map(d => d.msg || JSON.stringify(d)).join('; ')
-    if (res.status === 401 && token && !path.startsWith('/api/auth')) setSession(null)
+    if (res.status === 401 && citizen && /^\/api\/reports/.test(path) && /citizen/i.test(msg || '')) setCitizen(null)  // citizen session expired
+    else if (res.status === 401 && token && !path.startsWith('/api/auth')) setSession(null)
     throw new ApiError(msg || `Request failed (${res.status})`, res.status)
   }
   return data
 }
 
 /* Demo citizen session (simulated identity — no Aadhaar data is stored). */
-export const getCitizen = () => { try { return JSON.parse(store.get('cr_citizen')) } catch { return null } }
+// Only a session carrying a server-issued token counts; older browser-only sessions are ignored.
+export const getCitizen = () => { try { const c = JSON.parse(store.get('cr_citizen')); return c?.token ? c : null } catch { return null } }
 export const setCitizen = c => store.set('cr_citizen', c ? JSON.stringify(c) : null)

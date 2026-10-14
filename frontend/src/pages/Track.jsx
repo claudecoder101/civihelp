@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { api, getCitizen, store } from '../api'
 import { Badge, ErrorBox, Icon, Loading, fmtTime, relDue, statusTone, useApi, useLang } from '../ui'
 import { DispatchTrail } from '../dispatch'
@@ -14,6 +14,9 @@ export default function Track() {
   const nav = useNavigate()
   const [q, setQ] = useState(id || '')
   const { data, error, loading, reload } = useApi(id ? `/api/reports/${encodeURIComponent(id)}` : null)
+  const loc = useLocation()
+  // Citizens sign in to track and confirm (server-side session); no anonymous path.
+  if (!getCitizen()) return <Navigate to="/login/citizen" replace state={{ from: loc.pathname }} />
 
   return (
     <div className="rise">

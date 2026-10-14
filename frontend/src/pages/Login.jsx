@@ -67,11 +67,15 @@ export default function Login() {
     setWho(c); setStep('code'); setNote(`Simulated: OTP sent to Aadhaar-linked mobile ${mask(c.mobile)}`)
     return c
   }
-  function citizenVerify(c, entered) {
-    if (entered !== c.otp) { setErr('That code is wrong. Use the code shown in the simulated SMS.'); return }
-    setCitizen({ id: c.id, name: c.name, area: c.area, mobile: c.mobile })
-    setAccess({ name: c.name, line: `${c.area} · Aadhaar ${c.aadhaar} (simulated)`, role: 'citizen', count: null })
-    setStep('access')
+  async function citizenVerify(c, entered) {
+    setErr(null)
+    try {
+      // The server checks the (mock) code and issues the citizen session that reporting and confirming require.
+      const r = await api('/api/citizen/login', { body: { mobile: c.mobile, code: entered } })
+      setCitizen({ id: c.id, name: c.name, area: c.area, mobile: c.mobile, token: r.token })
+      setAccess({ name: c.name, line: `${c.area} · Aadhaar ${c.aadhaar} (simulated)`, role: 'citizen', count: null })
+      setStep('access')
+    } catch (e) { setErr(e.message) }
   }
 
   /* ---------- staff (real OTP backend) ---------- */
@@ -108,7 +112,7 @@ export default function Login() {
       const c = await citizenSend(profile.mobile); if (!c) return
       await sleep(3000); if (id !== runId.current) return
       await typeInto(setCode, c.otp, 90)
-      await sleep(300); citizenVerify(c, c.otp); setBusy(false)
+      await sleep(300); await citizenVerify(c, c.otp); setBusy(false)
     } else {
       if (!await staffSend(profile.mobile)) return
       await sleep(3000); if (id !== runId.current) return
@@ -125,7 +129,7 @@ export default function Login() {
     if (step === 'mobile') {
       if (isCitizen) await citizenSend(mobile)
       else await staffSend(mobile)
-    } else if (isCitizen) citizenVerify(who, code.trim())
+    } else if (isCitizen) await citizenVerify(who, code.trim())
     else await staffVerify(mobile, code.trim())
   }
   const go = () => nav(from || (isCitizen ? '/report' : '/staff'), { replace: true })

@@ -99,7 +99,7 @@ def staff_from_token(con, token):
         if not hmac.compare_digest(sig, hmac.new(SECRET.encode(), body.encode(), hashlib.sha256).hexdigest()):
             raise ValueError
         data = json.loads(base64.urlsafe_b64decode(body))
-        if parse(data["exp"]) < now():
+        if parse(data["exp"]) < now() or "sid" not in data:  # a citizen token is never a staff token
             raise ValueError
     except Exception:
         raise AuthError(401, "Please log in again")
@@ -107,3 +107,43 @@ def staff_from_token(con, token):
     if not s:
         raise AuthError(401, "Account deactivated")
     return s
+
+
+# ---------- citizens (simulated identity) ----------
+# Demo registry standing in for Aadhaar e-KYC / DigiLocker: fictional numbers with fixed mock OTPs.
+# No Aadhaar data is requested or stored. Production: replace citizen_login with a real e-KYC check.
+DEMO_CITIZENS = {
+    "+919894021482": {"id": "priya", "name": "Priya S.", "otp": "482193"},
+    "+919943017356": {"id": "arun", "name": "Arun K.", "otp": "735614"},
+}
+REPORTS_PER_HOUR = 10  # per citizen — stops one account flooding the queue
+
+
+def _sign(payload):
+    body = base64.urlsafe_b64encode(json.dumps(payload).encode()).decode()
+    return body + "." + hmac.new(SECRET.encode(), body.encode(), hashlib.sha256).hexdigest()
+
+
+def citizen_login(con, mobile, code):
+    m = normalize(mobile)
+    if con.execute("SELECT 1 FROM staff WHERE mobile=?", (m,)).fetchone():
+        raise AuthError(403, "This number belongs to a staff account. Use Staff login.")
+    c = DEMO_CITIZENS.get(m)
+    if not c:
+        raise AuthError(403, "This demo only knows the two demo citizens.")
+    if not hmac.compare_digest((code or "").strip(), c["otp"]):
+        raise AuthError(401, "That code is wrong.")
+    return _sign({"cid": c["id"], "exp": iso(now() + timedelta(hours=SESSION_H))}), c
+
+
+def citizen_from_token(token):
+    try:
+        body, sig = (token or "").split(".")
+        if not hmac.compare_digest(sig, hmac.new(SECRET.encode(), body.encode(), hashlib.sha256).hexdigest()):
+            raise ValueError
+        data = json.loads(base64.urlsafe_b64decode(body))
+        if parse(data["exp"]) < now() or "cid" not in data:  # a staff token is never a citizen token
+            raise ValueError
+    except Exception:
+        raise AuthError(401, "Please sign in as a citizen first")
+    return data["cid"]
