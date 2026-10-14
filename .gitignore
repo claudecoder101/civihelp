@@ -8,3 +8,4 @@ __pycache__/
 .env
 backend/models/
 .pytest_cache/
+backend/uploads/

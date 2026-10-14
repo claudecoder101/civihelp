@@ -52,7 +52,7 @@ export default function Dashboard() {
                 <XAxis type="number" allowDecimals={false} {...axis} />
                 <YAxis type="category" dataKey="dept" width={150} {...axis} />
                 <Tooltip {...tip} cursor={{ fill: '#f0f2f1' }} />
-                <Bar dataKey="count" name="Overdue" fill={C.bad} radius={[0, 4, 4, 0]} barSize={22} />
+                <Bar isAnimationActive={false} dataKey="count" name="Overdue" fill={C.bad} radius={[0, 4, 4, 0]} barSize={22} />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -80,8 +80,8 @@ export default function Dashboard() {
               <YAxis allowDecimals={false} {...axis} />
               <Tooltip {...tip} cursor={{ fill: '#f0f2f1' }} />
               <Legend wrapperStyle={{ fontSize: 14 }} />
-              <Bar dataKey="open" name="Open" stackId="a" fill={C.navy} barSize={36} />
-              <Bar dataKey="closed" name="Closed" stackId="a" fill={C.grey} radius={[4, 4, 0, 0]} />
+              <Bar isAnimationActive={false} dataKey="open" name="Open" stackId="a" fill={C.navy} barSize={36} />
+              <Bar isAnimationActive={false} dataKey="closed" name="Closed" stackId="a" fill={C.grey} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </Panel>

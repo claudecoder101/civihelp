@@ -40,10 +40,10 @@ export default function Evaluation() {
               <YAxis domain={[0, 1]} tickFormatter={v => `${v * 100}%`} tick={{ fill: C.ink2, fontSize: 12.5 }} tickLine={false} axisLine={false} />
               <Tooltip formatter={v => pct(v, 1)} contentStyle={{ borderRadius: 6, border: 'none', boxShadow: '0 4px 16px rgba(15,31,54,.15)' }} cursor={{ fill: '#f0f2f1' }} />
               <Legend wrapperStyle={{ fontSize: 14 }} />
-              <Bar dataKey="ai" name="AI (meaning)" fill={C.navy} radius={[3, 3, 0, 0]}>
+              <Bar isAnimationActive={false} dataKey="ai" name="AI (meaning)" fill={C.navy} radius={[3, 3, 0, 0]}>
                 <LabelList dataKey="ai" position="top" formatter={v => Math.round(v * 100)} style={{ fontSize: 12, fill: C.navy, fontWeight: 700 }} />
               </Bar>
-              <Bar dataKey="baseline" name="Baseline (keywords)" fill={C.grey} radius={[3, 3, 0, 0]}>
+              <Bar isAnimationActive={false} dataKey="baseline" name="Baseline (keywords)" fill={C.grey} radius={[3, 3, 0, 0]}>
                 <LabelList dataKey="baseline" position="top" formatter={v => Math.round(v * 100)} style={{ fontSize: 12, fill: C.ink2 }} />
               </Bar>
             </BarChart>
