@@ -11,7 +11,7 @@
 | 5 | Auto-assign, polish, public board API, demo reset API | done | a055041 |
 | 6 | 35 API tests + lockout/deadline fixes | done | 45f1711 |
 | 7 | UI redesign (board, about, offline map, GSAP, reset button) | done (finished in WP8) | a5f20c2 |
-| 8 | Visual check + finish UI redesign | done — 12 pages × desktop+mobile, no overflow/errors; fixed eval mobile overflow; offline map verified (?offline) | WP8 |
+| 8 | Visual check + finish UI redesign | done — 12 pages × desktop+mobile, no overflow/errors; fixed eval mobile overflow; offline map verified (?offline) | 00f100a |
 | 9 | Red-team attack (judge + attacker) and fixes | todo | |
 | 10 | Playwright run of full demo script + speed check | todo | |
 | 11 | Name decided → rename (brand.js, engine.APP_NAME, index.html) + logo | todo — waiting on user | |
