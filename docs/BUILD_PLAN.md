@@ -21,6 +21,7 @@
 | 15 | Rehearsal fixes + backup video notes | todo | |
 
 **Decisions (15 Oct, 01:05):** ask user before each WP · WP9 red-team inline by main session · WP14 = claude.ai Slides artifact · README screenshots captured by Claude via built-in browser.
+**Decisions (15 Oct, 01:12):** next session = Playwright plugin. Order: bug sweep every page (Playwright) → WP9 red-team → README → PPT (Slides artifact) last. No video. GitHub: no repo exists yet (only claudecoder101/ICS) — ask user name + public/private once, then push after every commit. AI status: e5 dup F1 0.85 vs 0.26 baseline, routing top-1 93.5% — done, no tuning.
 
 ## Work packets
 
