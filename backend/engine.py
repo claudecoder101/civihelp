@@ -4,7 +4,7 @@ import threading
 import os
 import re
 
-APP_NAME = os.environ.get("APP_NAME", "CivicResolve")  # working name — rename here (+ frontend/src/brand.js)
+APP_NAME = os.environ.get("APP_NAME", "Civihelp")  # working name — rename here (+ frontend/src/brand.js)
 
 CATEGORIES = {
     "roads": ("Roads & potholes", "சாலை / பள்ளம்"),

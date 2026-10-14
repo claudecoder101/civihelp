@@ -14,7 +14,7 @@
 | 8 | Visual check + finish UI redesign | done — 12 pages × desktop+mobile, no overflow/errors; fixed eval mobile overflow; offline map verified (?offline) | 00f100a |
 | 9 | Red-team attack (judge + attacker) and fixes | todo | |
 | 10 | Full demo-script run in built-in browser + speed check | todo | |
-| 11 | Name decided → rename (brand.js, engine.APP_NAME, index.html) + logo | todo — waiting on user | |
+| 11 | Name decided → rename to Civihelp + logo | doing — renamed; logo todo | |
 | 12 | README (setup, features, metrics, Credits & AI disclosure) | todo | |
 | 13 | Public GitHub push | todo — needs user OK | |
 | 14 | PPT | todo — last, per user | |

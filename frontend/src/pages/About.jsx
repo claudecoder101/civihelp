@@ -32,7 +32,7 @@ export default function About() {
     <div ref={el} className="space-y-16">
       <header className="max-w-3xl">
         <h1 className="text-[clamp(2.1rem,5vw,3.6rem)] font-bold leading-[1.02]">Complaints get closed. Problems don’t get fixed.</h1>
-        <p className="mt-4 text-lg text-ink-2">CivicResolve is an accountability layer for city complaints: one owner per issue, a deadline everyone can see, and a closure that only counts when the citizen agrees.</p>
+        <p className="mt-4 text-lg text-ink-2">Civihelp is an accountability layer for city complaints: one owner per issue, a deadline everyone can see, and a closure that only counts when the citizen agrees.</p>
       </header>
 
       <section aria-labelledby="prob-h">

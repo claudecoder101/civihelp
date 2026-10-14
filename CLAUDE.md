@@ -1,4 +1,4 @@
-# CivicResolve (working name) — CODE VAULT 2026 hackathon
+# Civihelp — CODE VAULT 2026 hackathon
 
 Civic complaint routing + accountability for Indian cities (Coimbatore pilot, EN + Tamil).
 The user is the reviewer; Claude is the engineer. Deadline 15 Oct 2026, 7:00 AM IST.
@@ -16,7 +16,7 @@ The user is the reviewer; Claude is the engineer. Deadline 15 Oct 2026, 7:00 AM 
 - Cost ₹0: no paid APIs. AI = local `intfloat/multilingual-e5-small` (backend/models/, gitignored).
 - One worker at a time; agents only with `model: sonnet`/`haiku`.
 - Never commit `backend/civic.db`, `.audit_key`, `.session_key`, `uploads/`, `models/`, `.venv/`.
-- Name is undecided: it lives in `frontend/src/brand.js`, `backend/engine.py` APP_NAME, `frontend/index.html`.
+- Name: Civihelp — lives in `frontend/src/brand.js`, `backend/engine.py` APP_NAME, `frontend/index.html`.
 - Commands: tests `cd backend && .venv/Scripts/python -m pytest -q`; reseed `backend/.venv/Scripts/python backend/seed.py`; build `cd frontend && npm run build`; run: Browser preview "civicresolve" (`.claude/launch.json`, serves frontend/dist on :8000 — rebuild frontend to see UI changes, restart preview for backend changes).
 - Ask before: public GitHub push, deleting data, deps > ~50 MB.
 - Keep replies short. Batch independent commands.

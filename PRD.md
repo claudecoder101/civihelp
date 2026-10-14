@@ -1,4 +1,4 @@
-# PRD — CivicResolve: India's accountability layer for civic complaints
+# PRD — Civihelp: India's accountability layer for civic complaints
 
 > CODE VAULT 2026 assigned problem. Merges the official statement, the ChatGPT brief, and Opus research (3 agents, 9:25 PM) on 13 Indian systems, 12 global platforms, academic work and past hackathons. On approval: saved as `PRD.md`, first commit.
 
@@ -35,7 +35,7 @@ Citizens file duplicate complaints; complaints have no clear owner, bounce betwe
 
 **Gaps nobody fills:** cross-language duplicate linking · fake closures · ownership lost on transfer · escalation that goes nowhere · no published accuracy.
 
-## 3. What makes CivicResolve different
+## 3. What makes Civihelp different
 1. **Tamil ↔ English duplicate linking** — a Tamil and an English report about the same bin are linked to one issue, with meaning %, distance and time shown separately. No deployed system does this.
 2. **Duplicates are linked, never closed** — every reporter follows the issue and gets every update; more reports raise its priority. (Fixes NYC311's failure.)
 3. **Verified closure** — "Resolved" needs a closure reason + evidence note; the citizen confirms or reopens. Dashboard shows **closure rate vs citizen-verified rate** side by side. (Fixes AP's 90% vs 22%.)
@@ -157,7 +157,7 @@ Teammate tasks: PPT from this PRD · test + bug list · presenting.
 | Impact & feasibility | ₹0 open-source, runs offline on a laptop, Open311-style API, plugs into existing portals instead of replacing them |
 | Presentation & demo | 3-min scripted demo with a "break the chain live" moment; Evaluation page with numbers; backup video |
 
-PPT (8 slides): Problem with real data → Who suffers → What exists & gaps → CivicResolve → Live demo → Measured results → Impact & scale-up → Team + disclosure.
+PPT (8 slides): Problem with real data → Who suffers → What exists & gaps → Civihelp → Live demo → Measured results → Impact & scale-up → Team + disclosure.
 
 ## 9. Demo (3 min)
 1. Resident A reports overflowing bin in **Tamil** → tracking ID.

@@ -1,4 +1,4 @@
-"""CivicResolve API. Run: uvicorn app:app --port 8000 (from backend/)."""
+"""Civihelp API. Run: uvicorn app:app --port 8000 (from backend/)."""
 import base64
 import os
 import secrets

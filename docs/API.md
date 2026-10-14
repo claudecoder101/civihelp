@@ -1,4 +1,4 @@
-# CivicResolve API (backend: FastAPI on http://localhost:8000)
+# Civihelp API (backend: FastAPI on http://localhost:8000)
 
 All JSON. Staff endpoints need header `Authorization: Bearer <token>`.
 Times are ISO-8601 strings (IST, e.g. `2026-10-14T22:10:00+05:30`).
