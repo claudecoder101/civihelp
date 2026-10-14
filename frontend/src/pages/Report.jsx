@@ -1,11 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet'
+import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet'
 import { api } from '../api'
 import { Badge, ErrorBox, Icon, Loading, TierBadge, useLang, useMeta } from '../ui'
 
 function PinOnClick({ onPick }) {
   useMapEvents({ click: e => onPick([e.latlng.lat, e.latlng.lng]) })
+  return null
+}
+
+function FollowPin({ pos }) {
+  const map = useMap()
+  useEffect(() => { if (!map.getBounds().contains(pos)) map.flyTo(pos, 16) }, [map, pos])
   return null
 }
 
@@ -185,12 +191,21 @@ export default function Report() {
           <div>
             <h2 className="label text-base">{t.location}</h2>
             <p className="mb-2 text-sm text-ink-2">{t.locationHint}</p>
+            <label className="mb-2 flex items-center gap-2 text-sm">
+              <span className="text-ink-2">Jump to area</span>
+              <select className="rounded-md border border-line bg-card px-2 py-1.5" defaultValue=""
+                onChange={e => { const w = meta.wards.find(w => String(w.id) === e.target.value); if (w) setPos([w.lat, w.lng]) }}>
+                <option value="" disabled>Choose…</option>
+                {meta.wards.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
+              </select>
+            </label>
             <div className="h-[300px] overflow-hidden rounded-md sm:h-[360px]">
               <MapContainer center={pos} zoom={14} scrollWheelZoom={false} className="h-full w-full">
                 <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                 <Marker position={pos} draggable eventHandlers={{ dragend: e => { const l = e.target.getLatLng(); setPos([l.lat, l.lng]) } }} />
                 <PinOnClick onPick={setPos} />
+                <FollowPin pos={pos} />
               </MapContainer>
             </div>
             <p className="mt-1.5 text-sm text-ink-2 tnum">{pos[0].toFixed(5)}, {pos[1].toFixed(5)}</p>

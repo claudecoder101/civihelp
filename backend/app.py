@@ -116,8 +116,10 @@ def open_issues_for_dups(con):
 
 def analyse(con, text, category, lat, lng, at):
     w = engine.ward_for(lat, lng)
-    return ({"id": w[0], "name": w[1]}, engine.route(text, category, w[1]),
-            engine.dup_candidates(text, category, lat, lng, at, open_issues_for_dups(con)))
+    routing = engine.route(text, category, w[1])
+    # no category given but routing is confident → use it so unrelated categories aren't offered as duplicates
+    cat = category or (routing[0]["category"] if routing[0]["tier"] == "high" else None)
+    return {"id": w[0], "name": w[1]}, routing, engine.dup_candidates(text, cat, lat, lng, at, open_issues_for_dups(con))
 
 
 def pct(values, q):
@@ -196,7 +198,7 @@ def meta():
     return {"categories": [{"id": k, "name": v[0], "name_ta": v[1]} for k, v in engine.CATEGORIES.items()],
             "departments": [{"id": k, "name": v[0], "name_ta": v[1]} for k, v in engine.DEPARTMENTS.items()],
             "wards": [{"id": w[0], "name": w[1], "lat": w[2], "lng": w[3]} for w in engine.WARDS],
-            "city": engine.CITY, "ai_model": engine.ai_available()}
+            "city": engine.CITY, "ai_model": engine._model is not None}  # don't block page load on model warm-up
 
 
 @app.post("/api/reports/check")

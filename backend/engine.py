@@ -1,5 +1,6 @@
 """Routing (rules + reasons) and duplicate detection (multilingual embeddings + distance + time)."""
 import math
+import threading
 import os
 import re
 
@@ -42,7 +43,7 @@ RULES = {
 }
 RULE_VERSION = 2
 HIGH, MEDIUM = 0.7, 0.45
-DUP_RADIUS_M, DUP_WINDOW_H, DUP_THRESHOLD = 300, 168, 0.6
+DUP_RADIUS_M, DUP_WINDOW_H, DUP_THRESHOLD = 300, 168, 0.45  # tuned on the tune split only; staff approve every link
 
 TAMIL = re.compile(r"[஀-௿]")
 
@@ -98,25 +99,29 @@ def route(text: str, category: str | None, ward_name: str = "") -> list[dict]:
 
 # ---------- text similarity ----------
 MODEL_DIR = os.path.join(os.path.dirname(__file__), "models", "e5-small")
-# e5 cosine is compressed: unrelated civic text ~0.80, same issue ~0.86-0.92 (measured on TA/EN pairs) → rescale that band
-SIM_RANGE = {"ai": (0.82, 0.90), "baseline": (0.0, 0.5)}
+# e5 cosine is compressed (unrelated civic text ~0.80, same issue ~0.81-0.96); rescale that band. Tuned on tune split.
+SIM_RANGE = {"ai": (0.79, 0.90), "baseline": (0.0, 0.5)}
 _model = None
 _model_failed = False
 _cache: dict = {}
 
 
+_load_lock = threading.Lock()
+
+
 def ai_available() -> bool:
     global _model, _model_failed
-    if _model is None and not _model_failed:
-        try:
-            if not os.path.isdir(MODEL_DIR):
-                raise FileNotFoundError(MODEL_DIR)
-            os.environ.setdefault("HF_HUB_OFFLINE", "1")
-            from sentence_transformers import SentenceTransformer
-            _model = SentenceTransformer(MODEL_DIR, device="cpu")
-        except Exception as e:  # fall back to TF-IDF; demo must never break
-            print("AI model unavailable, using TF-IDF baseline:", e)
-            _model_failed = True
+    with _load_lock:  # startup warm-up and first request may race
+        if _model is None and not _model_failed:
+            try:
+                if not os.path.isdir(MODEL_DIR):
+                    raise FileNotFoundError(MODEL_DIR)
+                os.environ.setdefault("HF_HUB_OFFLINE", "1")
+                from sentence_transformers import SentenceTransformer
+                _model = SentenceTransformer(MODEL_DIR, device="cpu")
+            except Exception as e:  # fall back to TF-IDF; demo must never break
+                print("AI model unavailable, using TF-IDF baseline:", e)
+                _model_failed = True
     return _model is not None
 
 
@@ -144,9 +149,14 @@ def mode_used(mode: str) -> str:
     return "ai" if mode == "ai" and ai_available() else "baseline"
 
 
-def pair_score(sim: float, dist_m: float, hours: float, mode: str) -> float:
+def meaning(sim: float, mode: str) -> float:
+    """Calibrated 0-1 meaning match (raw cosine is compressed and would mislead if shown as a %)."""
     lo, hi = SIM_RANGE[mode]
-    s = max(0.0, min(1.0, (sim - lo) / (hi - lo)))
+    return max(0.0, min(1.0, (sim - lo) / (hi - lo)))
+
+
+def pair_score(sim: float, dist_m: float, hours: float, mode: str) -> float:
+    s = meaning(sim, mode)
     return round(0.6 * s + 0.25 * (1 - dist_m / DUP_RADIUS_M) + 0.15 * (1 - hours / DUP_WINDOW_H), 3)
 
 
@@ -167,15 +177,16 @@ def dup_candidates(text, category, lat, lng, at, issues, mode="ai"):
         best = max(range(len(near)), key=lambda i: pair_score(sims[i], near[i][1], near[i][2], m))
         r, d, h = near[best]
         score = pair_score(sims[best], d, h, m)
-        reasons = [f"Similar meaning: {round(sims[best] * 100)}%" + (" (AI, multilingual)" if m == "ai" else " (word match)"),
+        mean = meaning(sims[best], m)
+        reasons = [f"Meaning match: {round(mean * 100)}%" + (" (AI, multilingual)" if m == "ai" else " (word match)"),
                    f"{round(d)} m away", f"{round(h, 1)} h apart"]
         if is_tamil(text) != is_tamil(r["text"]):
             reasons.insert(0, "Cross-language match (Tamil ↔ English)")
         if iss["category"] == category and category:
             reasons.append("Same category")
-        out.append({"issue_id": iss["id"], "score": score, "similarity": round(sims[best], 3),
+        out.append({"issue_id": iss["id"], "score": score, "similarity": round(mean, 3), "raw_cosine": round(sims[best], 3),
                     "distance_m": round(d), "hours_apart": round(h, 1), "category": iss["category"],
                     "sample_text": r["text"], "report_count": iss["report_count"], "status": iss["status"],
                     "reasons": reasons, "probable": score >= DUP_THRESHOLD})
     out.sort(key=lambda c: -c["score"])
-    return out[:5]
+    return [c for c in out if c["score"] >= DUP_THRESHOLD / 2][:5]  # hide clearly-unrelated nearby issues
