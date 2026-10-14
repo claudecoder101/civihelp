@@ -3,18 +3,31 @@ import { Link } from 'react-router-dom'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { useGSAP } from '@gsap/react'
-import { reducedMotion } from '../anim'
+import { reducedMotion, useTilt } from '../anim'
 import { Icon } from '../ui'
 
 gsap.registerPlugin(ScrollTrigger)
 
 const different = [
   ['languages', 'Tamil ↔ English duplicate linking', 'An AI model reads meaning, not words. A Tamil report and an English report about the same bin become one issue, with meaning, distance and time shown separately.'],
-  ['check', 'Closure verified by citizens', 'A department can mark work resolved, but only the citizen who reported it can close it, or reopen it.'],
+  ['check', 'Closure verified by citizens', 'A department can mark work resolved, but it closes only when 30% of the citizens who reported it confirm. Any one of them can reopen it.'],
   ['shield', 'Tamper-evident audit log', 'Every status change is hash-chained to the one before. Edit a row in the database and the chain visibly breaks.'],
   ['route', 'Routing that explains itself', 'Each suggested department comes with reasons and a confidence tier. Low confidence goes to a person, never a guess.'],
 ]
 const flow = ['Report', 'Route', 'Own', 'Fix', 'Citizen confirms']
+
+function TiltCard({ icon, title, body }) {
+  const tilt = useTilt(7)
+  return (
+    <article data-reveal className="card p-6">
+      <div {...tilt} className="tilt">
+        <span className="pop grid size-10 place-items-center rounded-lg bg-navy-soft text-navy"><Icon name={icon} className="size-5" /></span>
+        <h3 className="pop mt-4 text-xl font-bold">{title}</h3>
+        <p className="mt-2 text-ink-2">{body}</p>
+      </div>
+    </article>
+  )
+}
 
 export default function About() {
   const el = useRef(null)
@@ -53,13 +66,7 @@ export default function About() {
       <section aria-labelledby="diff-h">
         <h2 id="diff-h" className="text-2xl font-bold">What we do differently</h2>
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
-          {different.map(([icon, title, body]) => (
-            <article key={title} data-reveal className="card lift p-6">
-              <span className="grid size-10 place-items-center rounded-lg bg-navy-soft text-navy"><Icon name={icon} className="size-5" /></span>
-              <h3 className="mt-4 text-xl font-bold">{title}</h3>
-              <p className="mt-2 text-ink-2">{body}</p>
-            </article>
-          ))}
+          {different.map(([icon, title, body]) => <TiltCard key={title} icon={icon} title={title} body={body} />)}
         </div>
       </section>
 

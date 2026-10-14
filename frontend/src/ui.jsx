@@ -157,7 +157,7 @@ export const dict = {
     trackTitle: 'Track your report', trackLede: 'Enter the tracking ID you got when you reported.', trackingId: 'Tracking ID', trackBtn: 'Track',
     dept: 'Department', due: 'Resolve by', citizens: n => `${n} citizen${n === 1 ? '' : 's'} reported this`, reportsLabel: 'Citizens reporting this',
     escalated: 'Escalated to supervisor', stopped: 'Deadline stopped: marked resolved', overdueBy: s => `${s} overdue`, dueIn: s => `in ${s}`,
-    timeline: 'Public timeline', notifications: 'Updates sent to you', wasFixed: 'Was it fixed?', fixedLede: 'The department marked this resolved. Only a citizen can confirm it.',
+    timeline: 'Public timeline', notifications: 'Updates sent to you', wasFixed: 'Was it fixed?', fixedLede: 'The department marked this resolved. It closes when 30% of the citizens who reported it confirm.',
     yes: 'Yes, it is fixed', no: 'No, reopen it', reopenNote: 'What is still wrong?', sendReopen: 'Reopen issue', cancel: 'Cancel',
     closure: 'Closure reason', evidence: 'Evidence', awaitingTriage: 'Waiting for a staff member to review and assign it.',
     thanksFixed: 'Thank you. The issue is closed as citizen-verified.', thanksReopen: 'The issue is reopened and back with the department.',
@@ -171,7 +171,7 @@ export const dict = {
     resolved: 'Resolved', verified: 'Verified', ack: 'Median acknowledge', bounces: 'Bounced', hours: h => h == null ? '—' : `${h < 10 ? h.toFixed(1) : Math.round(h)} h`,
     byCategory: 'Open issues by category', boardFoot: 'Numbers come straight from the issue log. Demo pilot with fictional data.',
     footer: 'Demo pilot for Coimbatore. Wards, staff and reports are fictional.', footerMap: 'Map data © OpenStreetMap contributors.',
-    pillars: ['Tamil and English reports of the same problem are linked, never closed as duplicates.', 'Only a citizen can confirm an issue is fixed.', 'Every status change is written to a tamper-evident log.'],
+    pillars: ['Tamil and English reports of the same problem are linked, never closed as duplicates.', 'An issue closes only when 30% of its reporters confirm the fix.', 'Every status change is written to a tamper-evident log.'],
   },
   ta: {
     report: 'புகார் அளிக்க', track: 'புகாரைக் கண்காணிக்க', board: 'நகரப் பலகை', about: 'எப்படிச் செயல்படுகிறது', staff: 'அலுவலர் உள்நுழைவு', emergency: 'அவசரமா? 112 ஐ அழைக்கவும்',
@@ -196,7 +196,7 @@ export const dict = {
     trackTitle: 'உங்கள் புகாரைக் கண்காணிக்கவும்', trackLede: 'புகாரளித்தபோது கிடைத்த கண்காணிப்பு எண்ணை உள்ளிடவும்.', trackingId: 'கண்காணிப்பு எண்', trackBtn: 'கண்காணி',
     dept: 'துறை', due: 'தீர்வுக் காலக்கெடு', citizens: n => `${n} பேர் இதைப் புகாரளித்துள்ளனர்`, reportsLabel: 'புகாரளித்த குடிமக்கள்',
     escalated: 'மேலதிகாரிக்கு அனுப்பப்பட்டது', stopped: 'காலக்கெடு நிறுத்தப்பட்டது: தீர்க்கப்பட்டதாகக் குறிக்கப்பட்டது', overdueBy: s => `${s} தாமதம்`, dueIn: s => `இன்னும் ${s}`,
-    timeline: 'பொதுக் காலவரிசை', notifications: 'உங்களுக்கான அறிவிப்புகள்', wasFixed: 'சரி செய்யப்பட்டதா?', fixedLede: 'துறை இதைத் தீர்த்ததாகக் குறித்துள்ளது. குடிமக்கள் மட்டுமே இதை உறுதிசெய்ய முடியும்.',
+    timeline: 'பொதுக் காலவரிசை', notifications: 'உங்களுக்கான அறிவிப்புகள்', wasFixed: 'சரி செய்யப்பட்டதா?', fixedLede: 'துறை இதைத் தீர்த்ததாகக் குறித்துள்ளது. புகாரளித்தவர்களில் 30% பேர் உறுதிசெய்தால் மட்டுமே மூடப்படும்.',
     yes: 'ஆம், சரி செய்யப்பட்டது', no: 'இல்லை, மீண்டும் திறக்கவும்', reopenNote: 'இன்னும் என்ன பிரச்சினை?', sendReopen: 'மீண்டும் திறக்கவும்', cancel: 'ரத்துசெய்',
     closure: 'மூடல் காரணம்', evidence: 'ஆதாரம்', awaitingTriage: 'அலுவலர் பரிசீலித்து ஒதுக்குவதற்காகக் காத்திருக்கிறது.',
     thanksFixed: 'நன்றி. குடிமகன் உறுதிசெய்ததாகப் பிரச்சினை மூடப்பட்டது.', thanksReopen: 'பிரச்சினை மீண்டும் திறக்கப்பட்டு துறைக்கு அனுப்பப்பட்டது.',
@@ -210,7 +210,7 @@ export const dict = {
     resolved: 'தீர்க்கப்பட்டவை', verified: 'உறுதிசெய்யப்பட்டவை', ack: 'ஏற்க ஆன இடைநிலை நேரம்', bounces: 'திருப்பி அனுப்பியவை', hours: h => h == null ? '—' : `${h < 10 ? h.toFixed(1) : Math.round(h)} மணி`,
     byCategory: 'வகைவாரியாக நிலுவையில் உள்ள பிரச்சினைகள்', boardFoot: 'எண்கள் நேரடியாகப் பிரச்சினைப் பதிவேட்டிலிருந்து வருகின்றன. கற்பனைத் தரவுடன் கூடிய முன்னோட்டத் திட்டம்.',
     footer: 'கோயம்புத்தூருக்கான முன்னோட்டத் திட்டம். வார்டுகள், அலுவலர்கள், புகார்கள் அனைத்தும் கற்பனையானவை.', footerMap: 'வரைபடத் தரவு © OpenStreetMap பங்களிப்பாளர்கள்.',
-    pillars: ['ஒரே பிரச்சினை பற்றிய தமிழ், ஆங்கிலப் புகார்கள் இணைக்கப்படும்; நகல் என்று மூடப்படாது.', 'பிரச்சினை சரியானதைக் குடிமகன் மட்டுமே உறுதிசெய்ய முடியும்.', 'ஒவ்வொரு நிலை மாற்றமும் மாற்ற முடியாத பதிவேட்டில் எழுதப்படும்.'],
+    pillars: ['ஒரே பிரச்சினை பற்றிய தமிழ், ஆங்கிலப் புகார்கள் இணைக்கப்படும்; நகல் என்று மூடப்படாது.', 'புகாரளித்தவர்களில் 30% பேர் உறுதிசெய்தால் மட்டுமே பிரச்சினை மூடப்படும்.', 'ஒவ்வொரு நிலை மாற்றமும் மாற்ற முடியாத பதிவேட்டில் எழுதப்படும்.'],
   },
 }
 

@@ -27,7 +27,7 @@ body `{ text, category|null, lat, lng, landmark|null, contact|null, photo_base64
 (`follow_issue_id` = resident chose "Follow this issue" → linked immediately.)
 
 ### GET /api/reports/{id}
-→ `{ id, text, category, ward, landmark, created_at, status, issue: null | { id, dept_name, status, report_count, ack_due, resolve_due, sla_reason, escalated, closure_reason, evidence }, timeline:[{at, status, public_note}], notifications:[{at, message}], can_confirm:bool }`
+→ `{ id, text, category, ward, landmark, created_at, status, issue: null | { id, dept_name, status, report_count, ack_due, resolve_due, sla_reason, escalated, closure_reason, evidence }, timeline:[{at, status, public_note}], notifications:[{at, message}], can_confirm:bool, confirmations: null | { have, need, mine }, dispatch: null | { owner, status, next_step, next_due, hops:[{from, to, sent_at, received_at}] } }`
 (no contact, no internal notes, no officer names)
 
 ### POST /api/reports/{id}/confirm
@@ -69,3 +69,19 @@ closure_reason ∈ `Repaired`, `No action needed`, `Referred to other authority`
 ### GET /api/evaluation → `{ dataset:{reports, issues, note}, routing:{top1, top3, macro_f1, confusion:{labels, matrix}}, duplicates:{ai:{precision,recall,f1,bcubed_f1,recall_at_5}, baseline:{...same}}, latency:{median_h,p90_h}, overdue_rate, model:string }`
 
 Uploaded photos served at `/uploads/<file>`.
+
+
+## v2 additions (15 Oct)
+
+### GET /api/issues/{id} — new fields
+- `dispatch`: `{ owner, status, next_step, next_due, hops:[{ from, to, sent_at, sent_by, reason, sent_hash, received_at, received_by, received_hash }] }` — rebuilt from the audit log. *Sent* = assigned / handed over; *Received* = acknowledged by the receiving department.
+- `ai_match`: `null | { model, anchor:{id, text, tamil}, pairs:[{ id, text, tamil, cross_language, meaning (0–1), distance_m, hours }] }` — each linked report vs the first, scored by multilingual-e5-small.
+
+### GET /api/dispatch (staff)
+`{ viewpoint, incoming, received, in_progress, awaiting_citizens, sent_waiting }` — issue summaries with `last_hop`, `next_step`, `next_due`. Officers see their department; triage/supervisors see the triage desk.
+
+### POST /api/reports/{id}/confirm — quorum
+Closes only when `ceil(30% × linked reporters)` (min 1) distinct reporters confirm; each reporter once (400 on repeat). `fixed:false` from any reporter reopens immediately.
+
+### GET /api/demo/samples
+`[{ label, id }]` — fictional tracking IDs: in progress, awaiting confirmation, closed (citizen-verified).

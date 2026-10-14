@@ -17,7 +17,7 @@
 | 11 | Name decided → rename to Civihelp + logo | done — pin+check logo (favicon + header) | see log |
 | 12 | README (setup, features, metrics, Credits & AI disclosure) | moved to WP26 | |
 | 13 | Public GitHub push | done — github.com/claudecoder101/civihelp | 237a123 |
-| 14 | PPT | todo — after 06:00 | |
+| 14 | PPT | on hold — only when the user says so | |
 | 15 | Rehearsal fixes | dropped (no video) | |
 | 16 | UI pass: dim theme, glow, glass, chart entrances | done | 0f67239 |
 | 17 | v2 logo (அ + A bubbles) + loading screen + landing + main menu | done | see log |
@@ -27,9 +27,9 @@
 | 21 | AI match panel | done | see log |
 | 22 | 30% reporter quorum (backend + tests + UI) | done — 38 tests pass; seed reaches quorum | see log |
 | 23 | Try-a-sample buttons (Report, Track) | done — full v2 demo passes in Playwright | see log |
-| 24 | Scroll reveals + CSS 3D tilt | todo | |
-| 25 | Playwright run of all v2 flows, fixes, reseed | todo | |
-| 26 | README + API docs + final push | todo | |
+| 24 | Scroll reveals + CSS 3D tilt | done — tilt on landing, menu, About cards | see log |
+| 25 | Playwright run of all v2 flows, fixes, reseed | done — 68 page views EN/TA × desktop/375: 0 errors, 0 overflow; v2 demo end-to-end | see log |
+| 26 | README + API docs + final push | done | see log |
 
 **Decisions (15 Oct, 01:05):** ask user before each WP · WP9 red-team inline by main session · WP14 = claude.ai Slides artifact · README screenshots captured by Claude via built-in browser.
 **Decisions (15 Oct, 01:12):** next session = Playwright plugin. Order: bug sweep every page (Playwright) → WP9 red-team → README → PPT (Slides artifact) last. No video. GitHub: no repo exists yet (only claudecoder101/ICS) — ask user name + public/private once, then push after every commit. AI status: e5 dup F1 0.85 vs 0.26 baseline, routing top-1 93.5% — done, no tuning.
