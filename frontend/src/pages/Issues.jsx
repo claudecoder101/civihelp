@@ -15,11 +15,11 @@ export default function Issues() {
 
   return (
     <>
-      <PageHead title="Issues" sub="Every issue has one owner department and a due time. Overdue issues escalate to a supervisor automatically.">
+      <PageHead eyebrow="One owner · one due time" title="Issues" sub="Every issue has one owner department and a due time. Overdue issues escalate to a supervisor automatically.">
         <button className="btn btn-ghost btn-sm" onClick={reload}><Icon name="refresh" />Refresh</button>
       </PageHead>
 
-      <div className="mb-4 flex flex-wrap items-end gap-3 rounded-lg bg-card p-4">
+      <div className="mb-4 flex flex-wrap items-end gap-3 rounded-xl bg-card p-4 ring-1 ring-line/60">
         <div>
           <label htmlFor="f-status" className="label">Status</label>
           <select id="f-status" className="field" value={sp.get('status') || ''} onChange={e => set('status', e.target.value)}>
@@ -46,9 +46,9 @@ export default function Issues() {
       {data && (data.length === 0
         ? <p className="rounded-lg bg-card p-8 text-lg text-ink-2">No issues match these filters.</p>
         : (
-          <div className="overflow-x-auto rounded-lg bg-card">
+          <div className="overflow-x-auto rounded-xl bg-card ring-1 ring-line/60">
             <table className="w-full min-w-[820px] text-left text-[15px]">
-              <thead className="bg-sunk text-sm text-ink-2">
+              <thead className="bg-sunk/70 font-mono text-[11.5px] uppercase tracking-[0.12em] text-ink-2">
                 <tr>
                   {['Issue', 'Category', 'Ward', 'Owner', 'Status', 'Reports', 'Priority', 'Due'].map(h => <th key={h} scope="col" className="px-4 py-3 font-semibold">{h}</th>)}
                 </tr>
@@ -57,8 +57,8 @@ export default function Issues() {
                 {data.map(i => {
                   const due = relDue(['Resolved', 'Closed'].includes(i.status) ? null : (i.status === 'Assigned' || i.status === 'Reopened' ? i.ack_due : i.resolve_due))
                   return (
-                    <tr key={i.id} onClick={() => nav(`/staff/issues/${i.id}`)} className={`cursor-pointer border-t border-sunk hover:bg-paper ${i.overdue ? 'bg-bad-soft/40' : ''}`}>
-                      <td className="whitespace-nowrap px-4 py-3"><Link to={`/staff/issues/${i.id}`} className="font-bold text-navy hover:underline" onClick={e => e.stopPropagation()}>{i.id}</Link></td>
+                    <tr key={i.id} onClick={() => nav(`/staff/issues/${i.id}`)} className={`cursor-pointer border-t border-sunk transition-colors hover:bg-navy-soft/40 ${i.overdue ? 'bg-bad-soft/40' : ''}`}>
+                      <td className="whitespace-nowrap px-4 py-3"><Link to={`/staff/issues/${i.id}`} className="font-mono font-semibold text-navy hover:underline" onClick={e => e.stopPropagation()}>{i.id}</Link></td>
                       <td className="px-4 py-3 capitalize">{i.category}</td>
                       <td className="px-4 py-3">{i.ward?.name || i.ward}</td>
                       <td className="px-4 py-3">{i.dept_name}{i.bounce_count > 0 && <span className="ml-1 text-sm text-warn" title="Times rejected to another department">↺{i.bounce_count}</span>}</td>

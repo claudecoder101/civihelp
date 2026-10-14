@@ -54,10 +54,10 @@ export default function StaffLogin() {
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-8 lg:grid-cols-[minmax(0,1fr)_420px] lg:py-14">
         <div>
           <Wordmark sub="Staff workbench" />
-          <h1 className="mt-10 text-[clamp(1.9rem,3.6vw,2.6rem)] font-extrabold leading-[1.1] tracking-tight">Sign in with your registered government mobile</h1>
+          <h1 className="mt-10 text-[clamp(1.9rem,3.6vw,2.6rem)] font-bold leading-[1.05]">Sign in with your registered government mobile</h1>
           <p className="mt-3 max-w-xl text-lg text-ink-2">Only numbers in the official staff directory can sign in. Every login, failed attempt and lockout is written to the audit log.</p>
 
-          <div className="mt-8 max-w-md rounded-lg bg-card p-6">
+          <div className="card mt-8 max-w-md p-6">
             {step === 'mobile' ? (
               <form onSubmit={requestOtp} noValidate>
                 <label htmlFor="mobile" className="label">Mobile number</label>
@@ -69,7 +69,7 @@ export default function StaffLogin() {
               <form onSubmit={verify} noValidate>
                 <p className="text-[15px] text-ink-2">Code sent to <strong className="text-ink tnum">{mobile}</strong>. It expires in 5 minutes.</p>
                 <label htmlFor="code" className="label mt-4">6-digit code</label>
-                <input id="code" ref={codeRef} className="field text-center text-3xl font-bold tracking-[0.5em] tnum" inputMode="numeric"
+                <input id="code" ref={codeRef} className="field mono text-center text-3xl tracking-[0.5em] tnum" inputMode="numeric"
                   autoComplete="one-time-code" maxLength={6} value={code} onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} />
                 <button className="btn btn-primary mt-4 w-full" disabled={busy || code.length !== 6}>{busy ? 'Verifying…' : 'Verify and sign in'}</button>
                 <div className="mt-3 flex flex-wrap justify-between gap-2 text-sm">
@@ -96,7 +96,7 @@ export default function StaffLogin() {
               {staff.data?.map(s => (
                 <li key={s.mobile}>
                   <button type="button" onClick={() => { setMobile(s.mobile); setStep('mobile'); setErr(null) }}
-                    className={`w-full rounded-md p-3 text-left transition-colors ${mobile === s.mobile ? 'bg-navy-soft' : 'bg-card hover:bg-sunk'}`}>
+                    className={`w-full rounded-md p-3 text-left transition-colors ${mobile === s.mobile ? "bg-navy-soft ring-2 ring-navy/30" : "card hover:bg-sunk"}`}>
                     <span className="flex items-center gap-2 font-semibold">{s.name}<Badge tone="navy" className="ml-auto">{s.role}</Badge></span>
                     <span className="block text-sm text-ink-2">{s.designation}{s.dept_name ? `, ${s.dept_name}` : ''}</span>
                     <span className="block text-sm font-medium tnum">{s.mobile}</span>
@@ -124,7 +124,7 @@ function SmsInbox() {
     return () => { live = false; clearInterval(id) }
   }, [])
   return (
-    <aside className="self-start rounded-lg bg-ink p-5 text-white lg:sticky lg:top-6" aria-label="Simulated SMS inbox">
+    <aside className="self-start rounded-xl bg-ink p-5 shadow-lg text-white lg:sticky lg:top-6" aria-label="Simulated SMS inbox">
       <div className="flex items-center gap-2">
         <Icon name="phone" className="size-5" />
         <h2 className="text-lg font-bold">Demo SMS inbox</h2>

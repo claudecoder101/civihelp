@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
-import { CircleMarker, MapContainer, Popup, TileLayer } from 'react-leaflet'
+import { CircleMarker, Popup } from 'react-leaflet'
+import { CityMap } from '../map'
 import { ErrorBox, Icon, Loading, useApi, useMeta } from '../ui'
 import { PageHead } from './StaffLayout'
 
@@ -12,7 +13,7 @@ export default function Hotspots() {
 
   return (
     <div className="rise">
-      <PageHead title="Hotspots" sub="Each circle is one issue, sized by how many residents reported it. Red means overdue.">
+      <PageHead eyebrow="Where complaints cluster" title="Hotspots" sub="Each circle is one issue, sized by how many residents reported it. Red means overdue.">
         <span className="flex items-center gap-3 text-sm text-ink-2">
           <span className="flex items-center gap-1.5"><span className="size-3 rounded-full bg-navy" aria-hidden />On time</span>
           <span className="flex items-center gap-1.5"><span className="size-3 rounded-full bg-bad" aria-hidden />Overdue</span>
@@ -20,10 +21,8 @@ export default function Hotspots() {
         <button className="btn btn-ghost btn-sm" onClick={reload}><Icon name="refresh" />Refresh</button>
       </PageHead>
 
-      <div className="h-[420px] overflow-hidden rounded-lg lg:h-[460px]">
-        <MapContainer center={[meta.city.lat, meta.city.lng]} zoom={13} className="h-full w-full">
-          <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+      <div className="h-[420px] overflow-hidden rounded-xl ring-1 ring-line/60 lg:h-[480px]">
+        <CityMap center={[meta.city.lat, meta.city.lng]} zoom={13} wards={meta.wards}>
           {data.points.map(p => {
             const color = p.overdue ? '#b3261e' : '#16305f'
             return (
@@ -37,10 +36,10 @@ export default function Hotspots() {
               </CircleMarker>
             )
           })}
-        </MapContainer>
+        </CityMap>
       </div>
 
-      <section className="mt-6 overflow-x-auto rounded-lg bg-card">
+      <section className="mt-6 overflow-x-auto rounded-xl bg-card ring-1 ring-line/60">
         <table className="w-full min-w-[560px] text-left text-[15px]">
           <caption className="p-4 text-left text-lg font-bold">Ward × category</caption>
           <thead className="bg-sunk text-sm text-ink-2">

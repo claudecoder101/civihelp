@@ -2,27 +2,31 @@ import { Bar, BarChart, CartesianGrid, LabelList, Legend, ResponsiveContainer, T
 import { ErrorBox, Icon, Loading, num, pct, useApi } from '../ui'
 import { C } from './Dashboard'
 import { PageHead } from './StaffLayout'
+import { CountUp, useEnter } from '../staff/motion'
 
 const DUP_METRICS = [['precision', 'Precision'], ['recall', 'Recall'], ['f1', 'F1'], ['bcubed_f1', 'B-cubed F1'], ['recall_at_5', 'Recall@5']]
 
 export default function Evaluation() {
   const { data: e, error, loading, reload } = useApi('/api/evaluation')
+  const scope = useEnter([!!e])
   if (loading && !e) return <Loading />
   if (error) return <ErrorBox error={error} onRetry={reload} />
   if (!e) return null
   const dup = DUP_METRICS.map(([k, label]) => ({ label, ai: e.duplicates.ai?.[k] ?? 0, baseline: e.duplicates.baseline[k] }))
 
   return (
-    <div className="rise">
-      <PageHead title="Evaluation" sub="Measured on a labelled test set, recomputed live from the same code that runs the app." />
+    <div ref={scope}>
+      <PageHead eyebrow="Measured, not claimed" title="Evaluation" sub="Measured on a labelled test set, recomputed live from the same code that runs the app." />
 
-      <p role="note" className="mb-6 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md bg-warn-soft px-4 py-3 text-warn">
+      <p role="note" className="mb-6 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-warn-soft px-4 py-3 text-warn">
         <Icon name="alert" className="size-5" />
         <strong>Synthetic labelled data — not real-world results.</strong>
         <span>{e.dataset.reports} labelled reports, {e.dataset.issues} live issues.{e.dataset.note ? ` ${e.dataset.note}` : ''}</span>
       </p>
 
-      <div className="grid gap-6 xl:grid-cols-2">
+      <AiVsBaseline dup={dup} model={e.model} />
+
+      <div className="mt-6 grid gap-6 xl:grid-cols-2">
         <Section n="Routing accuracy" sub="Does the suggested department match the labelled owner?">
           <div className="grid grid-cols-3 gap-px overflow-hidden rounded-md bg-sunk">
             <Big k="Top-1" v={pct(e.routing.top1)} />
@@ -32,7 +36,7 @@ export default function Evaluation() {
           <Confusion {...e.routing.confusion} />
         </Section>
 
-        <Section n="Duplicate-cluster quality" sub={`AI (${e.model || 'multilingual embeddings'}) vs keyword baseline (TF-IDF), same candidates and thresholds.`}>
+        <Section n="Duplicate metrics, side by side" sub={`AI (${e.model || 'multilingual embeddings'}) vs keyword baseline (TF-IDF), same candidates and thresholds.`}>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={dup} margin={{ left: -18, right: 8, top: 18 }} barGap={2}>
               <CartesianGrid vertical={false} stroke={C.grid} />
@@ -60,7 +64,7 @@ export default function Evaluation() {
 
         <Section n="Overdue-case rate" sub="Open issues past their due time ÷ all open issues.">
           <div className="flex items-center gap-6">
-            <p className={`text-6xl font-extrabold tracking-tight tnum ${e.overdue_rate > 0.2 ? 'text-bad' : 'text-ink'}`}>{pct(e.overdue_rate, 1)}</p>
+            <p className={`font-mono text-5xl font-semibold tracking-tight sm:text-6xl ${e.overdue_rate > 0.2 ? 'text-bad' : 'text-ink'}`}>{pct(e.overdue_rate, 1)}</p>
             <div className="h-4 flex-1 overflow-hidden rounded-full bg-sunk" role="img" aria-label={`Overdue rate ${pct(e.overdue_rate, 1)}`}>
               <div className="h-full rounded-full bg-bad" style={{ width: `${Math.min(100, (e.overdue_rate || 0) * 100)}%` }} />
             </div>
@@ -71,10 +75,39 @@ export default function Evaluation() {
   )
 }
 
+function AiVsBaseline({ dup, model }) {
+  return (
+    <section data-enter aria-labelledby="ai-h" className="overflow-hidden rounded-2xl bg-[#0b1a36] text-white shadow-[0_24px_60px_-28px_rgba(11,26,54,.8)]">
+      <div className="flex flex-wrap items-end gap-x-6 gap-y-2 px-6 pt-6 sm:px-8 sm:pt-8">
+        <div className="min-w-0">
+          <p className="font-mono text-[11.5px] uppercase tracking-[0.16em] text-[#ffb366]">Duplicate linking · AI vs no-AI</p>
+          <h2 id="ai-h" className="mt-1.5 text-[clamp(1.5rem,2.6vw,2rem)] font-extrabold leading-tight tracking-[-0.02em]">Meaning beats keywords, especially across Tamil and English</h2>
+        </div>
+        <p className="text-sm text-white/60">AI: {model || 'multilingual embeddings'} · Baseline: TF-IDF keywords</p>
+      </div>
+      <div className="mt-6 grid grid-cols-2 gap-px bg-white/10 sm:grid-cols-5">
+        {dup.map(m => {
+          const delta = Math.round((m.ai - m.baseline) * 100)
+          return (
+            <div key={m.label} className="bg-[#0b1a36] p-5">
+              <p className="text-[13px] text-white/60">{m.label}</p>
+              <CountUp value={m.ai} format={v => `${Math.round(v * 100)}%`} className="mt-1 block font-mono text-4xl font-semibold tracking-tight" />
+              <p className="mt-1 font-mono text-[13px] text-white/55">baseline {pct(m.baseline)}</p>
+              <p className={`mt-2 inline-flex rounded px-1.5 py-0.5 font-mono text-[13px] font-semibold ${delta > 0 ? 'bg-[#4fd18b]/15 text-[#7fe0aa]' : delta < 0 ? 'bg-[#ff8a80]/15 text-[#ffb3ad]' : 'bg-white/10 text-white/70'}`}>
+                {delta > 0 ? '+' : ''}{delta} pts
+              </p>
+            </div>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
 function Section({ n, sub, children }) {
   return (
-    <section className="rounded-lg bg-card p-5 sm:p-6">
-      <h2 className="text-xl font-extrabold">{n}</h2>
+    <section data-enter className="rounded-xl bg-card p-5 shadow-[0_1px_0_rgba(14,34,71,.04),0_10px_28px_-18px_rgba(14,34,71,.25)] ring-1 ring-line/60 sm:p-6">
+      <h2 className="text-xl font-extrabold tracking-tight">{n}</h2>
       <p className="mb-4 text-[15px] text-ink-2">{sub}</p>
       {children}
     </section>
@@ -84,7 +117,7 @@ function Section({ n, sub, children }) {
 const Big = ({ k, v }) => (
   <div className="bg-card p-4">
     <p className="text-sm text-ink-2">{k}</p>
-    <p className="text-4xl font-extrabold tracking-tight tnum">{v}</p>
+    <p className="font-mono text-3xl font-semibold tracking-tight sm:text-4xl">{v}</p>
   </div>
 )
 
