@@ -106,7 +106,7 @@ function AiVsBaseline({ dup, model }) {
 
 function Section({ n, sub, children }) {
   return (
-    <section data-enter className="rounded-xl bg-card p-5 shadow-[0_1px_0_rgba(14,34,71,.04),0_10px_28px_-18px_rgba(14,34,71,.25)] ring-1 ring-line/60 sm:p-6">
+    <section data-enter className="min-w-0 rounded-xl bg-card p-5 shadow-[0_1px_0_rgba(14,34,71,.04),0_10px_28px_-18px_rgba(14,34,71,.25)] ring-1 ring-line/60 sm:p-6">
       <h2 className="text-xl font-extrabold tracking-tight">{n}</h2>
       <p className="mb-4 text-[15px] text-ink-2">{sub}</p>
       {children}

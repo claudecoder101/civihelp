@@ -31,7 +31,7 @@ export function Meter({ value, label, className = '' }) {
 /* Small section card used across the workbench. */
 export function Card({ title, sub, eyebrow, children, className = '', icon, ...rest }) {
   return (
-    <section data-enter className={`rounded-xl bg-card p-5 shadow-[0_1px_0_rgba(14,34,71,.04),0_10px_28px_-18px_rgba(14,34,71,.25)] ring-1 ring-line/60 sm:p-6 ${className}`} {...rest}>
+    <section data-enter className={`min-w-0 rounded-xl bg-card p-5 shadow-[0_1px_0_rgba(14,34,71,.04),0_10px_28px_-18px_rgba(14,34,71,.25)] ring-1 ring-line/60 sm:p-6 ${className}`} {...rest}>
       {eyebrow && <p className="mb-1 font-mono text-[11px] uppercase tracking-[0.14em] text-ink-2">{eyebrow}</p>}
       {title && <h2 className="flex items-center gap-2 text-lg font-bold tracking-tight">{icon && <Icon name={icon} className="size-5 text-navy" />}{title}</h2>}
       {sub && <p className="mb-4 mt-0.5 text-[14.5px] text-ink-2 [text-wrap:pretty]">{sub}</p>}
