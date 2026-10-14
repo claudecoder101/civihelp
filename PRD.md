@@ -1,175 +1,185 @@
 # PRD — Civihelp: India's accountability layer for civic complaints
 
-> CODE VAULT 2026 assigned problem. Merges the official statement, the ChatGPT brief, and Opus research (3 agents, 9:25 PM) on 13 Indian systems, 12 global platforms, academic work and past hackathons. On approval: saved as `PRD.md`, first commit.
+> CODE VAULT 2026 (KPRIET × GeeksforGeeks) assigned problem. Coimbatore pilot, English + Tamil.
+> **v1** (built 14 Oct 19:00 → 15 Oct 01:45) is complete and working — see §4. **v2** (15 Oct 02:20 → 06:00) changes how people enter the product, how work moves between departments and how it looks — see §6.
+> Deadline 15 Oct 2026, 07:00 IST. Cost ₹0: open-source, offline, no paid APIs.
 
 ---
 
-## 0. Decisions
-- **One AI model:** cross-language duplicate detection, `intfloat/multilingual-e5-small` (covers Tamil; MiniLM dropped — not trained on Tamil). Validate on 20 hand-made Tamil/English pairs first (15 min); fallback `l3cube-pune/indic-sentence-similarity-sbert`; final fallback TF-IDF.
-- **Routing stays rule-based + explained** (statement asks for responsibility rules + explainable confidence).
-- **Hotspot map** kept. Overdue prediction and Claude-API intake dropped.
-- **Design built with each page** (frontend-design), polish pass at end.
-- **Ask before anything major** (deps >~50 MB, delete, push public, deploy). Report changes after each milestone. Commit + push often.
-- **Teammates:** no faked commits; they get real tasks (PPT, testing, presenting).
-- **Model:** Opus 5.5 main session; subagents `model: opus`.
-- **Cost:** ₹0 — all open-source, offline, no API keys.
+## 1. Problem statement
 
-## 1. Problem
-Citizens file duplicate complaints; complaints have no clear owner, bounce between departments, get closed without work being done, and nobody is accountable for overdue cases.
+> Citizens file duplicate complaints; complaints have no clear owner, bounce between departments, get closed without work being done, and nobody is accountable for overdue cases. Responsibility rules and explainable confidence are expected.
+
+| # | Problem | Evidence from India |
+|---|---|---|
+| 1 | **Duplicates** — same issue reported many times, often in different languages | No deployed Indian system links Tamil and English reports of the same problem |
+| 2 | **No clear owner** | Complaints sit unassigned |
+| 3 | **Bouncing between departments** | Each transfer resets the clock; ownership is lost |
+| 4 | **Closed without work** | AP PGRS: 90% "resolved" officially vs **22%** citizen satisfaction (The Wire) |
+| 5 | **No accountability for overdue** | BMC Mumbai: only **414 of 13,552** escalated complaints resolved (Praja) |
+
+SDG 16 (16.6 accountable institutions, 16.7 responsive decision-making) · SDG 11 (basic urban services).
+Pitch: *"Rules where accountability matters, AI where language gets in the way."*
 
 ## 2. What exists today (research)
 | System | What it does | What it misses |
 |---|---|---|
-| **CPGRAMS** (national) | 21-day deadline, feedback call after closure, appeal, IGMS analytics with English/Hindi dedup | No cross-language dedup; Parliament flagged closures as "approach another agency" / no reason |
-| **Swachhata (MoHUA)** | Photo complaint + "resolved" photo, 12 h sanitation deadline | No dedup; fake "resolved" photos reported |
-| **Chennai 1913 / Namma Chennai** | App + helpline, reopen up to 2× | Premature closures, wrong photo as proof, no visible history |
+| **CPGRAMS** (national) | 21-day deadline, feedback call, appeal, EN/HI dedup | No cross-language dedup; closures with "approach another agency" |
+| **Swachhata (MoHUA)** | Photo complaint + "resolved" photo, 12 h deadline | No dedup; fake "resolved" photos |
+| **Chennai 1913 / Namma Chennai** | App + helpline, reopen up to 2× | Premature closures, no visible history |
 | **Coimbatore CCMC / Namma Kovai** | App, WhatsApp, SMS, officer rating | No dedup, no public resolution data |
-| **BBMP Sahaaya** (Bengaluru) | Received/assigned/transferred states | Repeat reports just prioritised; officials caught falsely closing |
-| **BMC Mumbai** | 4-level escalation | Only 414 of 13,552 escalated complaints resolved (Praja) |
-| **AP PGRS** | AI hotspots announced | 90% "resolved" officially vs **22%** citizen satisfaction (The Wire) |
-| **FixMyStreet** (UK) | Shows nearby same-category reports before submit; "follow" instead of re-filing | Location + category only, no text, no escalation |
-| **NYC311** | Huge open data | Closes duplicates as "Duplicate" → original left unresolved |
-| **Singapore OneService** | AI routing across agencies | One-tier government; self-reported numbers |
-| **Salesforce Einstein (Denver 311)** | Confidence tiers: auto / confirm / top-3 | Needs large labelled history |
-| **Past hackathons (SIH 2025, DARPG 2024)** | Photo+GPS, map pins, LLM category, upvotes, chatbot, voice | **None show measured accuracy, audit trail, routing explanations, SLA model, or Tamil↔English dedup** |
+| **BBMP Sahaaya** | Received/assigned/transferred states | Repeat reports only prioritised; false closures |
+| **BMC Mumbai** | 4-level escalation | 414 of 13,552 escalations resolved |
+| **AP PGRS** | AI hotspots | 90% vs 22% gap |
+| **FixMyStreet** (UK) | Nearby reports before submit; "follow" | Location + category only, no text |
+| **NYC311** | Open data | Closes duplicates → original left unresolved |
+| **Salesforce Einstein (Denver 311)** | Confidence tiers | Needs large labelled history |
+| **Past hackathons (SIH 2025, DARPG 2024)** | Photo+GPS, LLM category, upvotes | No measured accuracy, audit trail, routing reasons, SLA model or Tamil↔English dedup |
 
 **Gaps nobody fills:** cross-language duplicate linking · fake closures · ownership lost on transfer · escalation that goes nowhere · no published accuracy.
 
 ## 3. What makes Civihelp different
-1. **Tamil ↔ English duplicate linking** — a Tamil and an English report about the same bin are linked to one issue, with meaning %, distance and time shown separately. No deployed system does this.
-2. **Duplicates are linked, never closed** — every reporter follows the issue and gets every update; more reports raise its priority. (Fixes NYC311's failure.)
-3. **Verified closure** — "Resolved" needs a closure reason + evidence note; the citizen confirms or reopens. Dashboard shows **closure rate vs citizen-verified rate** side by side. (Fixes AP's 90% vs 22%.)
-4. **Ownership never lost** — rejecting requires a reason and a new owner who must accept; bounce count tracked as a metric.
-5. **Tamper-evident audit log** — every status change is hash-chained to the previous one; "Verify chain" button; edit a row in the DB live and the chain breaks on screen.
-6. **Routing with confidence tiers + reasons** — high: auto-suggest; medium: officer confirms; low: "Needs review" with top-3. Every suggestion explains itself.
-7. **Measured, not claimed** — live Evaluation page with standard metrics on a labelled set, and AI vs no-AI comparison.
+1. **Tamil ↔ English duplicate linking** with meaning %, distance and time shown separately.
+2. **Duplicates linked, never closed** — every reporter tracks one issue and gets every update; more reports raise priority.
+3. **Verified closure by citizens** — resolve needs reason + evidence; the issue closes only when **30% of its reporters** confirm (v2). Closure rate vs citizen-verified rate shown side by side.
+4. **Ownership never lost** — dispatch trail shows every hop as *sent* and *received*; rejecting needs a reason and a new owner; bounces counted publicly.
+5. **Tamper-evident audit log** — SHA-256 hash chain; edit a DB row live and verification fails on screen.
+6. **Routing with confidence tiers + reasons** — high: auto-assign; medium: confirm; low: Needs review with top-3.
+7. **Measured, not claimed** — live Evaluation page, AI vs no-AI.
 
-Pitch line: *"Rules where accountability matters, AI where language gets in the way."*
-SDG 16 (16.6 accountable institutions, 16.7 responsive decision-making) · SDG 11 (basic urban services).
+## 4. Done — v1 (working, tested)
 
-## 4. Pilot scope
-- Coimbatore (fictional 10-ward map, labelled demo data). Non-emergency only ("Emergency? Call 112").
-- 5 categories: Roads/Pothole · Garbage · Streetlight · Drainage · Water. 5 departments + Manual Triage.
-- English + Tamil input; original text stored.
-- **Login (staff): registered government mobile number + OTP.** Only numbers in the admin-maintained **official staff directory** (name, designation, department, ward, role) can log in — unknown numbers are refused. OTP: 6 digits, stored hashed, expires in 5 min, max 3 attempts, resend cooldown 30 s, lockout after repeated failures. Signed session token (8 h), role + department checked on every API call. Admin can deactivate a number instantly (transfer/retirement). Every login, failed attempt and lockout goes into the audit log. Audit events record the **logged-in officer**, so accountability is real.
-- **OTP delivery is simulated** in the demo (shown in a "demo SMS inbox" panel, ₹0). Code has one `send_sms()` function to plug into a real gateway (e.g. NIC/CDAC SMS, MSG91) later — clearly stated in README.
-- **Residents: no login required** — submit anonymously, track by tracking ID + optional phone (privacy-by-default, matches CPGRAMS/brief guidance). Optional "My reports" via phone + OTP shown on screen (simulated, no real SMS).
-- Demo staff directory (fictional numbers, e.g. `+91 90000 000xx`) seeded in `backend/seed.py` and listed in README.
+| Area | What works | Where |
+|---|---|---|
+| Intake | EN/TA text, category chips, map pin (Leaflet/OSM, offline fallback), landmark, photo, phone → tracking ID `CV-xxxx-XXXXXX` | `pages/Report.jsx`, `POST /api/reports` |
+| Duplicates (AI) | `intfloat/multilingual-e5-small` locally; candidates ≤300 m, ≤7 days; meaning + distance + time; "Already reported nearby?" + Follow | `engine.py`, `/api/reports/check` |
+| Routing | Versioned rules + EN/TA keywords + ward coverage → top-3, tier, reasons | `engine.py`, `pages/Triage.jsx` |
+| State machine | Triage → Assigned → Acknowledged → In progress → Resolved → Closed; Rejected/Reassigned, Escalated, Reopened; role permissions | `workflow.py` |
+| Deadlines | Per-category targets, "why this due time", auto-escalation | `workflow.py` |
+| Verified closure | Reason + evidence; citizen confirm/reopen | `Track.jsx`, `/api/reports/{id}/confirm` |
+| Audit | Append-only (SQLite triggers), hash chain, Verify, tamper script | `db.py`, `tamper.py`, `Audit.jsx` |
+| Staff login | Directory-only mobile + OTP (hashed, 5 min, 3 tries, 30 s resend, lockout), signed 8 h session, role + dept checks; SMS simulated via `send_sms()` | `auth.py` |
+| Dashboards | Ops KPIs, closure vs verified gap, charts, hotspot map, public City Board | `Dashboard.jsx`, `Hotspots.jsx`, `Board.jsx` |
+| Evaluation | 120 labelled reports: dup F1 **0.85 vs 0.26** TF-IDF, routing top-1 **93.5%**, latency, overdue rate | `metrics.py`, `Evaluation.jsx` |
+| Interop | `GET /open311/requests.json` | `app.py` |
+| Security check (15 Oct) | Staff APIs 401 without login; reset protected; empty/huge/out-of-range input rejected; fake ID 404; injected HTML stored as text | — |
+| UI (15 Oct) | Dim slate theme, drifting glow, glass cards, hollow meters, chart entrances, compact spacing; animation fallbacks fixed | `index.css`, `anim.jsx` |
+| Quality | 35 pytest tests; Playwright demo run passes; no console errors; no overflow at 375 px | `backend/tests` |
 
-## 5. Features
+## 5. Design review of v1
 
-**F1 Intake** — description (EN/TA), optional category, map pin (Leaflet), landmark, optional photo, optional contact → tracking ID `CV-0042`. **Before submit:** "Already reported nearby?" list (incl. cross-language) with **Follow this issue** button (FixMyStreet idea, smarter).
+**Keep:** EN/Tamil toggle and bilingual citizen pages · "Already reported nearby?" panel · dashboard "Closed is not the same as fixed" hero · navy staff sidebar · audit chain visual · honest evaluation labels.
 
-**F2 Routing** — versioned rule table (category + ward → lead dept, ack/resolve targets). Score from category rule + EN/TA keywords + ward coverage → top-3 depts with plain-language reasons and confidence tier.
-
-**F3 Duplicates (AI)** — candidates: open issues ≤300 m, ≤7 days (95% of duplicates arrive within 30 days per research; we use 7 for civic issues), compatible category → ranked by e5-small meaning similarity + distance + time. Staff approve; links reversible; who/why recorded. Each extra report raises issue priority.
-
-**F4 State machine + audit** — `Submitted → Triage → Assigned → Acknowledged → In progress → Resolved → Closed`, plus `Rejected→Reassigned`, `Escalated`, `Reopened`. Role-permission table; invalid moves blocked; required fields enforced. Events append-only (SQLite triggers) + SHA-256 hash chain + verify endpoint.
-
-**F5 SLA + escalation** — fictional per-category targets (labelled, not govt standards); each issue shows due time and why; overdue → auto `Escalated` event to supervisor (system actor).
-
-**F6 Notifications (simulated)** — in-app feed per report; all linked reporters notified. No real SMS.
-
-**F7 Verified closure** — resolve requires reason + evidence note; residents confirm or reopen from tracking page.
-
-**F8 Dashboards** — Ops: unassigned, awaiting ack, near SLA, overdue by dept, bounce count. Management: median/P90 ack & resolve time, overdue rate, closure vs verified rate, by dept/category.
-
-**F9 Hotspot map** — clusters sized by report count; ward × category table.
-
-**F10 Evaluation page** (labelled set ~120 reports, tuning/test split):
-| Required | Metric |
+| Problem | v2 fix |
 |---|---|
-| Routing accuracy | Top-1, Top-3, macro-F1, confusion matrix |
-| Duplicate-cluster quality | Pairwise P/R/F1, B-cubed F1, Recall@5; **e5 vs TF-IDF** |
-| Resolution latency | Median, P90 |
-| Overdue-case rate | Open past due ÷ open |
-Labelled "synthetic data — not real-world results."
+| Logo goes to the report form; no landing page | Logo → Landing; new entry flow (§6.1) |
+| "Staff login" in the public nav; staff ↔ public pages link into each other | Separate areas entered from the Main menu; cross-links removed |
+| Demo staff directory + SMS inbox clutter the login | 4 demo profile buttons + animated auto-login (§6.3) |
+| Hard to see where an issue is between departments | Dispatch trail with Sent / Received (§6.4) |
+| AI matching invisible unless you open Triage | AI match panel (§6.5) |
+| One citizen closes an issue for everyone | 30% reporter quorum (§6.6) |
+| Citizen (top nav) and staff (sidebar) feel like two products | One shell: sidebar + top bar (§6.2) |
+| No guidance for staff | Inline how-to guides (§6.4) |
+| Generic logo | Two merging speech bubbles (அ + A) with a check (§6.8) |
 
-**F11 Open311-style endpoint** — `GET /open311/requests.json` (cheap interoperability story).
+## 6. v2 features
 
-**Out of scope (README future work):** SSO/Aadhaar/DigiLocker login, real SMS/WhatsApp, voice, image similarity, full State→District→ULB→Panchayat tree (model allows it), DPDP review, live govt integration.
+### 6.1 Entry flow
+1. **Loading screen** (≤1.5 s, skippable, once per session): Tamil and English bubbles slide together, merge, check mark draws.
+2. **Landing** (`/`): pitch, 3 animated proof points, live City Board numbers, scroll reveals, CSS 3D tilt hero. **Enter** → Main menu; secondary: City Board, How it works.
+3. **Main menu** (`/start`): **Citizen** and **Staff** cards. `ENG | தமிழ்` appears here and stays in the top bar.
 
-## 6. Tech
+### 6.2 App shell
+- **Left sidebar:** sections + primary action (Citizen: Report an issue; Staff: Triage queue / My work). Drawer under 768 px.
+- **Top bar:** title + breadcrumb, `ENG | தமிழ்`, profile chip (name, role, dept), Sign out.
+- Citizen: Report · My reports · Track · City Board · How it works.
+- Staff (per role): Triage · My work · Dispatch · All issues · Dashboard · Hotspots · Evaluation · Audit.
+- 8-px spacing scale, 15–16 px text, 44 px targets, focus rings, WCAG AA.
+
+### 6.3 Demo login (simulated identity, no real data)
+- Choice: **Citizen login | Staff login**. Four profile buttons:
+  | Profile | Type | Access |
+  |---|---|---|
+  | Priya S. (RS Puram, writes Tamil) | Citizen | Report, my reports, track, confirm/reopen |
+  | Arun K. (Gandhipuram, writes English) | Citizen | Same; owns the linked English report |
+  | P. Lakshmi Priya | Staff · Solid Waste (officer) | Own dept queue, acknowledge, resolve |
+  | R. Kavitha | Staff · Grievance Cell (triage) | Triage, route, link duplicates |
+- **Citizen:** simulated Aadhaar step — masked mock number (`XXXX XXXX 4821`) + mock OTP; label *"Simulated — no Aadhaar data is requested or stored."* No Aadhaar input field.
+- **Staff:** real mobile + OTP backend, auto-typed: number types → OTP sent → ~3 s → code types from demo inbox → signed in. **Skip** = instant.
+- **Separation:** staff number at Citizen login → refused ("use Staff login"); citizens can't open staff routes.
+- **Reporting requires citizen login** (blocks spam/fake reports). Tracking by ID stays public.
+- After login: **"Your access"** card — what this profile can see/do + assigned work count.
+
+### 6.4 Dispatch tracking
+- **Dispatch trail** per issue (staff detail; simplified on citizen track): one row per hop — `From → To · Sent <time> · Received <time> by <officer> · Next: <step> (due …)`. *Sent* = assigned/reassigned event; *Received* = acknowledged by receiving dept; pending shows *Awaiting receipt* + timer, overdue in red. Chips open the audit event (who, when, reason, hash).
+- **Header facts:** submitted by (alias + linked-reporter count), current owner (dept + officer), current step, next step.
+- **Dispatch page:** *Sent, not yet received* · *Received, not yet acted on* (for the officer's dept).
+- **My work:** the dept's items grouped by next step.
+- **Guides** (collapsible, 3 steps each): how to send, receive, track.
+- Permissions shown plainly; unavailable actions hidden with a one-line reason.
+
+### 6.5 AI match panel (no translation)
+- Tamil and English texts side by side, badge `AI · multilingual meaning match · 91%`, distance, time apart.
+- Note: *"The model compares meaning across Tamil and English directly; matching reports merge into one issue that every reporter tracks."*
+- Linked-reporters list with how each was linked (auto / staff / citizen followed).
+
+### 6.6 Verified closure by quorum
+- Resolved → Closed (citizen-verified) when **ceil(30% × linked reporters)** confirm (min 1). Shown as `1 of 3 confirmations needed`. Any reporter can reopen with a note (reopen wins). Backend + tests.
+
+### 6.7 Demo helpers
+- Report: *Try a sample* (Tamil / English — same bin, shows the live match). Track: sample IDs (open, awaiting confirmation, closed).
+
+### 6.8 Visual design
+- Logo: two bubbles (அ, A) merging with a check; navy + saffron/green. Favicon, header, loading screen.
+- Theme: current dim slate + glass, compact. GSAP scroll reveals, CSS 3D tilt, reduced-motion respected. No new libraries.
+- All new screens bilingual (Tamil written by Claude; spot-check by team).
+
+### 6.9 Repo + docs
+- Root `README.md` (problem, features, screenshots, setup, demo profiles, metrics, architecture, **Credits & AI disclosure**), `backend/requirements.txt`, remove Vite boilerplate, update `docs/API.md`. Public repo `claudecoder101/civihelp`, push after every work packet.
+
+## 7. Tech
 | Layer | Choice |
 |---|---|
-| Backend | FastAPI + SQLite (stdlib) |
-| AI | sentence-transformers + `multilingual-e5-small` (CPU, offline after ~1 GB one-time download incl. PyTorch CPU) — **ask before install** |
-| Frontend | React + Vite + Tailwind, Leaflet (OSM), Recharts |
-| Tests | pytest: routing, duplicates, transitions, hash chain, metrics |
+| Backend | FastAPI + SQLite (stdlib), Python 3.12 |
+| AI | sentence-transformers + `intfloat/multilingual-e5-small`, CPU, offline after one-time download |
+| Frontend | React 19 + Vite + Tailwind 4, React Router, Leaflet (OSM), Recharts, GSAP |
+| Tests | pytest (routing, duplicates, transitions, hash chain, metrics, API); Playwright for UI flows |
 
-Layout: `backend/` (`app.py`, `engine.py`, `workflow.py`, `metrics.py`, `seed.py`, `tests/`) · `frontend/` (Report, Track, Workbench, Dashboard, Evaluation) · `PRD.md` · `README.md`.
-
-## 6b. Plugins, skills & agents — who does what
-| Job | Tool |
-|---|---|
-| Visual direction (palette, fonts, style for a govt/civic app) | `ui-ux-pro-max` (searches its style/palette/font DB) |
-| Building pages | `frontend-design` + `taste-skill: design-taste-frontend` (avoid generic AI look) |
-| Components (forms, tables, dialogs, accessible) | `ui-ux-pro-max: ui-styling` (shadcn/ui + Tailwind) |
-| Micro-animations (status changes, chain-verify) | `gsap-skills: gsap-react` (light touch) |
-| Parallel build | `superpowers: dispatching-parallel-agents` — Opus agents: backend, frontend, seed+metrics |
-| Keep scope tight | `ponytail` (always on) |
-| Type/import errors while editing | TypeScript + Pyright LSP plugins |
-| Pre-commit checks | `checker` agent |
-| Quick code lookups | `scout` agent |
-| Login/security review | `agent-skills: security-auditor` agent |
-| Test coverage of core logic | `agent-skills: test-engineer` agent |
-| Code review before final push | `agent-skills: code-reviewer` agent |
-| End-to-end demo check + screenshots | Playwright plugin / built-in browser |
-| Page speed sanity check | `agent-skills: web-performance-auditor` (only if time) |
-| Done = proven | `superpowers: verification-before-completion` |
-| PPT | `pptx` skill (or Slides artifact) |
-| Not used | `superdesign` (needs its own account/canvas — ask first), `brag`, `figma`/`vercel` (disabled) |
-
-## 7. Hackathon rules compliance
+## 8. Hackathon rules compliance
 | Rule | How |
 |---|---|
-| Built within 12 h | Repo created after 7 PM, no prior code |
-| No plagiarism | Original code; only open-source libraries |
-| Disclose AI/frameworks/APIs/libraries | README "Credits & Disclosure": Claude Code, ChatGPT (brief), e5 model, every library, OSM tiles, research sources |
-| Meaningful progress | Commit + push every 30–60 min |
-| No late submission | **Submit by 5:00 AM** |
+| Built in the event window | Repo created after 19:00, 14 Oct; no prior code |
+| No plagiarism | Original code; open-source libraries only |
+| Disclose AI, frameworks, APIs, libraries | README "Credits & Disclosure": Claude Code (Claude Opus 5.5), ChatGPT (brief), e5 model, every library, OSM tiles, research sources |
+| Meaningful progress | Commit + push after every work packet |
+| No late submission | Code freeze 06:00, submit before 07:00 |
 | Deliverables | Public repo · README · working demo · PPT |
-| Software only | Web app |
 
-## 8. Timeline (IST)
-| Time | Milestone |
-|---|---|
-| 9:45–10:15 | Repo, PRD.md, scaffold, design direction (ui-ux-pro-max); model download in background; 20-pair Tamil check |
-| 10:15–12:15 | Backend + login (Opus agent A): auth, routing, duplicates, state machine, hash chain, SLA, API + tests |
-| 10:15–12:45 | Frontend (Opus agent B): login, Report, Track, Workbench — designed as built |
-| 10:15–11:45 | Seed data (labelled) + metrics (me / agent C) |
-| 12:45–1:45 | Dashboard, hotspot map, Evaluation; wire everything together |
-| 1:45–2:45 | Security audit + code review + Playwright end-to-end, fixes, UI polish |
-| 2:45–3:30 | README + disclosure, screenshots |
-| 3:30–4:45 | PPT, final push, **submit** |
-| 4:45–7:00 | Rehearse ×2, backup video, buffer |
-
-**Estimate:** ~6 h build → app done ~2:45 AM, submitted ~4:45 AM, ~2 h buffer before 7:00.
-
-Teammate tasks: PPT from this PRD · test + bug list · presenting.
-
-## 8b. Judging map (each criterion → proof on screen)
+## 9. Judging map
 | Criterion | What judges see |
 |---|---|
-| Problem relevance & SDG | Every clause of the statement shown as a working feature; SDG 16.6/16.7 + 11; real Indian failure data (AP 90% vs 22%, BMC 414/13,552) |
-| Technical implementation | Live working loop, hash-chained audit, OTP login, state machine, tests passing |
-| Innovation | Tamil↔English duplicate linking (no deployed system does it), verified closure, tamper-evident log |
-| Impact & feasibility | ₹0 open-source, runs offline on a laptop, Open311-style API, plugs into existing portals instead of replacing them |
-| Presentation & demo | 3-min scripted demo with a "break the chain live" moment; Evaluation page with numbers; backup video |
+| Problem & SDG | Every clause of the statement → a working feature; SDG 16 + 11; real Indian data |
+| Technical | Live loop, hash-chained audit, OTP login, state machine, dispatch trail, tests passing |
+| Innovation | Tamil↔English linking, 30% citizen quorum, tamper-evident log |
+| Impact & feasibility | ₹0, runs offline on a laptop, Open311 endpoint, plugs into existing portals |
+| Presentation | Loading → landing → demo profiles; "break the chain live"; Evaluation numbers |
 
-PPT (8 slides): Problem with real data → Who suffers → What exists & gaps → Civihelp → Live demo → Measured results → Impact & scale-up → Team + disclosure.
+PPT (8 slides): Problem with data → Who suffers → What exists & gaps → Civihelp → Live demo → Measured results → Impact & scale-up → Team + disclosure.
 
-## 9. Demo (3 min)
-1. Resident A reports overflowing bin in **Tamil** → tracking ID.
-2. Resident B starts an **English** report → "Already reported nearby" shows the Tamil one → Follow.
-3. Triage: routing reasons + tier; one vague report → "Needs review".
-4. Dept acknowledges, updates; seeded overdue case shows escalation.
-5. Resolve with evidence → resident confirms (or reopens).
-6. Audit timeline → edit DB row → "Verify chain" fails.
-7. Dashboard: closure vs verified rate, hotspot map.
-8. Evaluation: 4 metrics, AI vs no-AI.
+## 10. Demo script (3 min, v2)
+1. Loading → Landing → Enter → Main menu → switch to தமிழ்.
+2. Citizen Priya (simulated Aadhaar) → Try a sample (Tamil) → tracking ID.
+3. Citizen Arun → English sample → "Already reported nearby" shows Priya's → Follow.
+4. Staff Kavitha (auto-OTP) → Triage: AI match panel, routing reasons, Needs review case.
+5. Staff Lakshmi Priya → Dispatch: received → acknowledge → resolve with evidence.
+6. Priya confirms → `1 of 1 needed` (30% of 2) → Closed (citizen-verified).
+7. Audit → tamper → Verify fails. Dashboard gap. Evaluation metrics.
 
-## 10. Verification
-- `pytest backend/tests` passes.
-- Playwright run of the demo script, no console errors.
+## 11. Out of scope (README "Future work")
+Real Aadhaar/DigiLocker/SSO, real SMS/WhatsApp, rate limiting per citizen, machine translation, voice intake, image similarity, full State→District→ULB hierarchy, DPDP review, live government integration, three.js 3D.
+
+## 12. Acceptance checks
+- `pytest` passes (existing 35 + quorum tests); `npm run build` clean; no console errors.
+- Playwright: entry flow; 4 demo logins; citizen ↛ staff routes; staff number refused at citizen login; report → duplicate → follow; dispatch sent/received; quorum close; audit verify.
+- 375 px no horizontal scroll; keyboard navigation; reduced motion respected.
 - Fresh clone → README steps work.

@@ -12,13 +12,24 @@
 | 6 | 35 API tests + lockout/deadline fixes | done | 45f1711 |
 | 7 | UI redesign (board, about, offline map, GSAP, reset button) | done (finished in WP8) | a5f20c2 |
 | 8 | Visual check + finish UI redesign | done — 12 pages × desktop+mobile, no overflow/errors; fixed eval mobile overflow; offline map verified (?offline) | 00f100a |
-| 9 | Red-team attack (judge + attacker) and fixes | todo | |
-| 10 | Full demo-script run in built-in browser + speed check | todo | |
+| 9 | Red-team attack (judge + attacker) and fixes | done — security checks passed, no holes; animation stall bugs fixed | 2bef1b4 |
+| 10 | Full demo-script run (Playwright) | done — steps 1–8 pass, no console errors | 2bef1b4 |
 | 11 | Name decided → rename to Civihelp + logo | done — pin+check logo (favicon + header) | see log |
-| 12 | README (setup, features, metrics, Credits & AI disclosure) | todo | |
-| 13 | Public GitHub push | todo — needs user OK | |
-| 14 | PPT | todo — last, per user | |
-| 15 | Rehearsal fixes + backup video notes | todo | |
+| 12 | README (setup, features, metrics, Credits & AI disclosure) | moved to WP26 | |
+| 13 | Public GitHub push | doing — user OK 02:15 | |
+| 14 | PPT | todo — after 06:00 | |
+| 15 | Rehearsal fixes | dropped (no video) | |
+| 16 | UI pass: dim theme, glow, glass, chart entrances | done | 0f67239 |
+| 17 | v2 logo (அ + A bubbles) + loading screen + landing + main menu | todo | |
+| 18 | App shell: sidebar + top bar (citizen + staff); remove staff↔public links | todo | |
+| 19 | Demo login: 4 profiles, mock Aadhaar, staff auto-OTP (~3 s, Skip), separation, Your access; reporting needs login | todo | |
+| 20 | Dispatch trail + Dispatch page + My work + guides | todo | |
+| 21 | AI match panel | todo | |
+| 22 | 30% reporter quorum (backend + tests + UI) | todo | |
+| 23 | Try-a-sample buttons (Report, Track) | todo | |
+| 24 | Scroll reveals + CSS 3D tilt | todo | |
+| 25 | Playwright run of all v2 flows, fixes, reseed | todo | |
+| 26 | README + API docs + final push | todo | |
 
 **Decisions (15 Oct, 01:05):** ask user before each WP · WP9 red-team inline by main session · WP14 = claude.ai Slides artifact · README screenshots captured by Claude via built-in browser.
 **Decisions (15 Oct, 01:12):** next session = Playwright plugin. Order: bug sweep every page (Playwright) → WP9 red-team → README → PPT (Slides artifact) last. No video. GitHub: no repo exists yet (only claudecoder101/ICS) — ask user name + public/private once, then push after every commit. AI status: e5 dup F1 0.85 vs 0.26 baseline, routing top-1 93.5% — done, no tuning.

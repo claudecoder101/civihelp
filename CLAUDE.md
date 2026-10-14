@@ -3,7 +3,7 @@
 Civic complaint routing + accountability for Indian cities (Coimbatore pilot, EN + Tamil).
 The user is the reviewer; Claude is the engineer. Deadline 15 Oct 2026, 7:00 AM IST.
 - Spec: `PRD.md` (look up sections by heading; never read whole). API: `docs/API.md`.
-- Plan + progress: `docs/BUILD_PLAN.md`.
+- Plan + progress: `docs/BUILD_PLAN.md`. Setup deps: `backend/requirements.txt`.
 
 ## Session start
 1. Read the Progress table in `docs/BUILD_PLAN.md`. Take the first WP that is `doing` or `todo`.
