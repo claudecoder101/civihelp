@@ -18,12 +18,23 @@ const ACCESS = {
   triage: ['Triage queue: route new reports', 'Link duplicates the AI found', 'Dashboard, hotspots, audit log'],
   officer: ['Your department’s work queue', 'Receive (acknowledge) and resolve work', 'Send work on to another department'],
 }
+const TX = {
+  en: { cTitle: 'Citizen sign in', sTitle: 'Staff sign in', cLede: 'Verify with your Aadhaar-linked mobile. This demo simulates the check — no Aadhaar data is requested or stored.',
+    sLede: 'Only numbers in the official staff directory can sign in. Every login and failed attempt is written to the audit log.', cMobile: 'Aadhaar-linked mobile', sMobile: 'Registered government mobile',
+    code: '6-digit code', send: 'Send code', verify: 'Verify and sign in', skipWait: 'Skip wait →', change: 'Change number', demo: 'Demo profiles',
+    demoLede: 'One click: we type the number, wait for the code, type it and sign you in.', signedIn: 'Signed in', access: 'Your access', cont: 'Continue' },
+  ta: { cTitle: 'குடிமகன் உள்நுழைவு', sTitle: 'அலுவலர் உள்நுழைவு', cLede: 'ஆதாருடன் இணைக்கப்பட்ட கைபேசி எண் மூலம் சரிபார்க்கவும். இந்த முன்னோட்டம் சரிபார்ப்பை உருவகப்படுத்துகிறது — ஆதார் விவரங்கள் கேட்கப்படுவதில்லை, சேமிக்கப்படுவதில்லை.',
+    sLede: 'அதிகாரப்பூர்வ அலுவலர் பட்டியலில் உள்ள எண்கள் மட்டுமே உள்நுழையலாம். ஒவ்வொரு உள்நுழைவும் தணிக்கைப் பதிவில் எழுதப்படும்.', cMobile: 'ஆதாருடன் இணைந்த கைபேசி எண்', sMobile: 'பதிவு செய்யப்பட்ட அரசுக் கைபேசி எண்',
+    code: '6 இலக்கக் குறியீடு', send: 'குறியீட்டை அனுப்பு', verify: 'சரிபார்த்து உள்நுழை', skipWait: 'காத்திருப்பைத் தவிர் →', change: 'எண்ணை மாற்று', demo: 'முன்னோட்டச் சுயவிவரங்கள்',
+    demoLede: 'ஒரே சொடுக்கில்: எண்ணை உள்ளிட்டு, குறியீட்டுக்காகக் காத்திருந்து, அதை உள்ளிட்டு உள்நுழைய வைக்கிறோம்.', signedIn: 'உள்நுழைந்துவிட்டீர்கள்', access: 'உங்கள் அணுகல்', cont: 'தொடர' },
+}
 const mask = m => '••••' + m.slice(-2)
 const norm = m => m.replace(/[\s-]/g, '').replace(/^(?=\d{10}$)/, '+91')
 
 export default function Login() {
   const { kind } = useParams()
-  const { t } = useLang()
+  const { t, lang } = useLang()
+  const x = TX[lang] || TX.en
   const nav = useNavigate()
   const from = useLocation().state?.from
   const [mobile, setMobile] = useState('')
@@ -111,8 +122,11 @@ export default function Login() {
 
   const submit = async e => {
     e.preventDefault()
-    if (step === 'mobile') isCitizen ? await citizenSend(mobile) : await staffSend(mobile)
-    else isCitizen ? citizenVerify(who, code.trim()) : await staffVerify(mobile, code.trim())
+    if (step === 'mobile') {
+      if (isCitizen) await citizenSend(mobile)
+      else await staffSend(mobile)
+    } else if (isCitizen) citizenVerify(who, code.trim())
+    else await staffVerify(mobile, code.trim())
   }
   const go = () => nav(from || (isCitizen ? '/report' : '/staff'), { replace: true })
 
@@ -138,24 +152,22 @@ export default function Login() {
 
           {step === 'access' && access ? (
             <div className="rise mt-6" aria-live="polite">
-              <p className="flex items-center gap-2 font-bold text-ok"><span className="grid size-7 place-items-center rounded-full bg-ok text-white"><Icon name="check" /></span>Signed in</p>
+              <p className="flex items-center gap-2 font-bold text-ok"><span className="grid size-7 place-items-center rounded-full bg-ok text-white"><Icon name="check" /></span>{x.signedIn}</p>
               <h1 className="mt-3 text-2xl font-extrabold">{access.name}</h1>
               <p className="text-ink-2">{access.line}</p>
               <div className="mt-5 rounded-xl bg-navy-soft/60 p-4 ring-1 ring-navy/15">
-                <p className="eyebrow">Your access</p>
+                <p className="eyebrow ta">{x.access}</p>
                 <ul className="mt-2 space-y-1.5">{ACCESS[access.role].map(a => <li key={a} className="flex gap-2"><Icon name="check" className="mt-1 size-4 shrink-0 text-ok" />{a}</li>)}</ul>
                 {access.count != null && <p className="mt-3 font-semibold text-navy">{access.count} item{access.count === 1 ? '' : 's'} waiting for you</p>}
               </div>
-              <button className="btn btn-primary mt-6 w-full sm:w-auto" onClick={go} autoFocus>Continue<Icon name="arrow" /></button>
+              <button className="btn btn-primary mt-6 w-full sm:w-auto" onClick={go} autoFocus>{x.cont}<Icon name="arrow" /></button>
             </div>
           ) : (
             <form onSubmit={submit} noValidate className="mt-6 max-w-md" aria-live="polite">
-              <h1 className="text-[clamp(1.5rem,2.6vw,1.9rem)] font-extrabold leading-tight">{isCitizen ? 'Citizen sign in' : 'Staff sign in'}</h1>
-              <p className="mt-1.5 text-[15px] text-ink-2">{isCitizen
-                ? 'Verify with your Aadhaar-linked mobile. This demo simulates the check — no Aadhaar data is requested or stored.'
-                : 'Only numbers in the official staff directory can sign in. Every login and failed attempt is written to the audit log.'}</p>
+              <h1 className="text-[clamp(1.5rem,2.6vw,1.9rem)] font-extrabold leading-tight">{isCitizen ? x.cTitle : x.sTitle}</h1>
+              <p className="mt-1.5 text-[15px] text-ink-2">{isCitizen ? x.cLede : x.sLede}</p>
 
-              <label htmlFor="m" className="label mt-5">{isCitizen ? 'Aadhaar-linked mobile' : 'Registered government mobile'}</label>
+              <label htmlFor="m" className="label mt-5">{isCitizen ? x.cMobile : x.sMobile}</label>
               <input id="m" className="field font-mono" inputMode="tel" autoComplete="tel" value={mobile} disabled={step === 'code'}
                 onChange={e => setMobile(e.target.value)} placeholder="+91 98xxxxxxxx" />
 
@@ -174,16 +186,16 @@ export default function Login() {
               {step === 'code' && (<>
                 {note && <p className="mt-4 flex items-start gap-2 rounded-lg bg-warn-soft px-3 py-2 text-[14px] text-warn"><Icon name="phone" className="mt-0.5 size-4 shrink-0" />
                   <span>{note}{isCitizen && who ? <> · code <strong className="font-mono">{who.otp}</strong></> : ''}</span></p>}
-                <label htmlFor="c" className="label mt-4">6-digit code</label>
+                <label htmlFor="c" className="label mt-4">{x.code}</label>
                 <input id="c" className="field font-mono text-lg tracking-[0.4em]" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={code} onChange={e => setCode(e.target.value.replace(/\D/g, ''))} autoFocus />
               </>)}
 
               {err && <p role="alert" className="mt-4 flex items-start gap-2 rounded-lg bg-bad-soft px-3 py-2 text-[14px] font-medium text-bad"><Icon name="alert" className="mt-0.5 size-4 shrink-0" />{err}</p>}
 
               <div className="mt-5 flex flex-wrap gap-2">
-                <button className="btn btn-primary" disabled={busy && !skip.current}>{step === 'mobile' ? 'Send code' : 'Verify and sign in'}</button>
-                {busy && <button type="button" className="btn btn-ghost" onClick={() => { skip.current = true }}>Skip wait →</button>}
-                {step === 'code' && !busy && <button type="button" className="btn btn-ghost" onClick={reset}>Change number</button>}
+                <button className="btn btn-primary" disabled={busy}>{step === 'mobile' ? x.send : x.verify}</button>
+                {busy && <button type="button" className="btn btn-ghost" onClick={() => { skip.current = true }}>{x.skipWait}</button>}
+                {step === 'code' && !busy && <button type="button" className="btn btn-ghost" onClick={reset}>{x.change}</button>}
               </div>
             </form>
           )}
@@ -191,8 +203,8 @@ export default function Login() {
 
         <aside aria-labelledby="demo-h" className="rise space-y-4">
           <div>
-            <h2 id="demo-h" className="text-lg font-bold">Demo profiles</h2>
-            <p className="text-[14px] text-ink-2">One click: we type the number, wait for the code, type it and sign you in.</p>
+            <h2 id="demo-h" className="ta text-lg font-bold">{x.demo}</h2>
+            <p className="ta text-[14px] text-ink-2">{x.demoLede}</p>
           </div>
           {[['citizen', CITIZENS.map(c => ({ ...c, line: `${c.area} · writes ${c.lang}` }))], ['staff', STAFF]].map(([type, list]) => (
             <div key={type}>

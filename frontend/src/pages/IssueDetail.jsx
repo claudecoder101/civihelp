@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../api'
 import { Badge, ErrorBox, Icon, Loading, StatusBadge, fmtTime, relDue, useApi, useMeta } from '../ui'
 import { gsap, reduced, settle, useEnter, useGSAP } from '../staff/motion'
@@ -12,6 +12,7 @@ const actionLabel = { Acknowledged: 'Acknowledge', 'In progress': 'Start work / 
 
 export default function IssueDetail() {
   const { id } = useParams()
+  const nav = useNavigate()
   const { data: i, error, loading, reload } = useApi(`/api/issues/${id}`)
   const [action, setAction] = useState(null)
   const scope = useEnter([!!i])
@@ -89,7 +90,11 @@ export default function IssueDetail() {
                   ))}
                 </div>
               )}
-            {action && <TransitionForm key={action} issue={i} to={action} onDone={() => { setAction(null); reload() }} onCancel={() => setAction(null)} />}
+            {action && <TransitionForm key={action} issue={i} to={action} onDone={() => {
+              // A hand-off moves ownership away: the sender can no longer open the issue, so go to Dispatch where it shows as Sent.
+              if (action === 'Rejected') return nav('/staff/dispatch', { state: { flash: `${i.id} sent on — it shows under “Sent — not received yet” until the next department receives it.` } })
+              setAction(null); reload()
+            }} onCancel={() => setAction(null)} />}
           </section>
 
           <section data-enter className="rounded-xl bg-card p-5 shadow-[0_1px_0_rgba(14,34,71,.04),0_10px_28px_-18px_rgba(14,34,71,.25)] ring-1 ring-line/60 sm:p-6">

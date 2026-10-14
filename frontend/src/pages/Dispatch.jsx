@@ -1,4 +1,4 @@
-import { Link, useOutletContext } from 'react-router-dom'
+import { Link, useLocation, useOutletContext } from 'react-router-dom'
 import { Guides } from '../dispatch'
 import { Card } from '../staff/bits'
 import { useEnter } from '../staff/motion'
@@ -31,6 +31,7 @@ function List({ title, sub, icon, rows, empty }) {
 
 export default function Dispatch() {
   const staff = useOutletContext()
+  const flash = useLocation().state?.flash
   const { data: d, error, loading, reload } = useApi('/api/dispatch')
   const scope = useEnter([!!d])
   if (loading && !d) return <Loading />
@@ -43,6 +44,7 @@ export default function Dispatch() {
         sub={officer ? 'Work sent to your department, what you have received, and what you sent on that is not received yet.' : 'Issues the triage desk dispatched that the receiving department has not received yet.'}>
         <button className="btn btn-ghost btn-sm" onClick={reload}><Icon name="refresh" />Refresh</button>
       </PageHead>
+      {flash && <p role="status" className="mb-4 flex items-start gap-2 rounded-lg bg-ok-soft px-4 py-3 font-semibold text-ok"><Icon name="check" className="mt-0.5 size-5 shrink-0" />{flash}</p>}
       <div data-enter className="mb-6"><Guides /></div>
       <div className="grid gap-6 xl:grid-cols-2">
         {officer && <List title="Incoming — receive these" sub="Sent to your department. Acknowledge to stamp them Received." icon="inbox" rows={d.incoming} empty="Nothing waiting to be received." />}
