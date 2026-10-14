@@ -10,3 +10,4 @@ backend/models/
 .pytest_cache/
 backend/uploads/
 backend/.audit_key
+backend/.session_key

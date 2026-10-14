@@ -58,7 +58,7 @@ export default function Issues() {
                   const due = relDue(['Resolved', 'Closed'].includes(i.status) ? null : (i.status === 'Assigned' || i.status === 'Reopened' ? i.ack_due : i.resolve_due))
                   return (
                     <tr key={i.id} onClick={() => nav(`/staff/issues/${i.id}`)} className={`cursor-pointer border-t border-sunk hover:bg-paper ${i.overdue ? 'bg-bad-soft/40' : ''}`}>
-                      <td className="px-4 py-3"><Link to={`/staff/issues/${i.id}`} className="font-bold text-navy hover:underline" onClick={e => e.stopPropagation()}>{i.id}</Link></td>
+                      <td className="whitespace-nowrap px-4 py-3"><Link to={`/staff/issues/${i.id}`} className="font-bold text-navy hover:underline" onClick={e => e.stopPropagation()}>{i.id}</Link></td>
                       <td className="px-4 py-3 capitalize">{i.category}</td>
                       <td className="px-4 py-3">{i.ward?.name || i.ward}</td>
                       <td className="px-4 py-3">{i.dept_name}{i.bounce_count > 0 && <span className="ml-1 text-sm text-warn" title="Times rejected to another department">↺{i.bounce_count}</span>}</td>

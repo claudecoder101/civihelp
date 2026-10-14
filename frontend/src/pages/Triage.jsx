@@ -93,12 +93,12 @@ function TriageCard({ item, meta, onDone }) {
           {duplicates.length === 0 && <p className="text-ink-2">No open issue nearby looks similar.</p>}
           <ul className="mt-2 space-y-2">
             {duplicates.map(d => (
-              <li key={d.issue_id} className={`rounded-md p-3 ${d.probable ? 'bg-ok-soft' : 'bg-sunk'}`}>
+              <li key={d.issue_id} className={`rounded-md p-3 ${d.strong ? 'bg-ok-soft' : d.probable ? 'bg-warn-soft' : 'bg-sunk'}`}>
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                   <Link to={`/staff/issues/${d.issue_id}`} className="font-bold text-navy hover:underline">Issue {d.issue_id}</Link>
                   <span className="text-sm font-semibold tnum">{pct(d.similarity)} meaning</span>
                   <span className="text-sm tnum text-ink-2">{Math.round(d.distance_m)} m · {Math.round(d.hours_apart)} h apart · {d.report_count} reports</span>
-                  {d.probable && <Badge tone="solidOk" className="ml-auto">Probable match</Badge>}
+                  {d.probable && (d.strong ? <Badge tone="solidOk" className="ml-auto">Probable match</Badge> : <Badge tone="warn" className="ml-auto">Possible match · check</Badge>)}
                 </div>
                 <p className="ta mt-1 line-clamp-2 text-[15px]">“{d.sample_text}”</p>
                 <ul className="mt-1 list-disc space-y-0.5 pl-5 text-sm">{d.reasons.map(x => <li key={x}>{x}</li>)}</ul>

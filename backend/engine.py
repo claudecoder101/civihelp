@@ -46,6 +46,7 @@ RULES = {
 RULE_VERSION = 2
 HIGH, MEDIUM = 0.7, 0.45
 DUP_RADIUS_M, DUP_WINDOW_H, DUP_THRESHOLD = 300, 168, 0.45  # tuned on the tune split only; staff approve every link
+DUP_STRONG = 0.6  # "probable" label; 0.45-0.6 is shown as "possible — please check"
 
 TAMIL = re.compile(r"[஀-௿]")
 
@@ -189,6 +190,6 @@ def dup_candidates(text, category, lat, lng, at, issues, mode="ai"):
         out.append({"issue_id": iss["id"], "score": score, "similarity": round(mean, 3), "raw_cosine": round(sims[best], 3),
                     "distance_m": round(d), "hours_apart": round(h, 1), "category": iss["category"],
                     "sample_text": r["text"], "report_count": iss["report_count"], "status": iss["status"],
-                    "reasons": reasons, "probable": score >= DUP_THRESHOLD})
+                    "reasons": reasons, "probable": score >= DUP_THRESHOLD, "strong": score >= DUP_STRONG})
     out.sort(key=lambda c: -c["score"])
     return [c for c in out if c["score"] >= DUP_THRESHOLD / 2][:5]  # hide clearly-unrelated nearby issues

@@ -144,11 +144,11 @@ export default function Report() {
                 <p className="mt-1 text-[15px] text-ink-2">{t.dupLede}</p>
                 <ul className="mt-4 space-y-3">
                   {dups.map(d => (
-                    <li key={d.issue_id} className={`rounded-md p-4 ${d.probable ? 'bg-ok-soft' : 'bg-sunk'}`}>
+                    <li key={d.issue_id} className={`rounded-md p-4 ${d.strong ? 'bg-ok-soft' : d.probable ? 'bg-warn-soft' : 'bg-sunk'}`}>
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="text-2xl font-extrabold tnum text-ink">{Math.round(d.similarity * 100)}%</span>
                         <span className="text-sm text-ink-2">meaning match</span>
-                        {d.probable && <Badge tone="solidOk" className="ml-auto">Likely the same issue</Badge>}
+                        {d.probable && (d.strong ? <Badge tone="solidOk" className="ml-auto">Likely the same issue</Badge> : <Badge tone="warn" className="ml-auto">Possibly the same</Badge>)}
                       </div>
                       <p className="ta mt-2 line-clamp-3 text-[15px]">“{d.sample_text}”</p>
                       <dl className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-ink-2 tnum">

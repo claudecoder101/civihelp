@@ -7,10 +7,10 @@ import os
 import secrets
 from datetime import timedelta
 
-from db import add_event, iso, now, parse
+from db import add_event, iso, key_file as db_key, now, parse
 from engine import APP_NAME
 
-SECRET = os.environ.get("CIVIC_SECRET") or secrets.token_hex(32)  # tokens reset on restart if unset
+SECRET = os.environ.get("CIVIC_SECRET") or db_key(".session_key")  # persisted so a restart does not log staff out
 OTP_TTL, RESEND_COOLDOWN, MAX_ATTEMPTS, MAX_FAILS, LOCK_MIN, SESSION_H = 300, 30, 3, 5, 10, 8
 
 

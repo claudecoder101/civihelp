@@ -83,7 +83,7 @@ def issue_summary(con, i, t=None):
     return {"id": i["id"], "category": i["category"], "dept_id": i["dept_id"], "dept_name": DEPT_NAMES.get(i["dept_id"]),
             "ward": WARD_NAMES.get(i["ward_id"]), "status": i["status"], "priority": i["priority"],
             "report_count": report_count(con, i["id"]), "created_at": i["created_at"], "ack_due": i["ack_due"],
-            "resolve_due": i["resolve_due"], "overdue": is_overdue(i, t), "escalated": bool(i["escalated"]),
+            "resolve_due": i["resolve_due"], "overdue": is_overdue(i, t), "escalated": bool(i["escalated"]) and i["status"] in workflow.OPEN,  # only flag while still open
             "bounce_count": i["bounce_count"], "lat": i["lat"], "lng": i["lng"]}
 
 
@@ -300,7 +300,7 @@ def track(rid: str, con=Depends(get_con)):
             "landmark": r["landmark"], "created_at": r["created_at"], "status": i["status"] if i else "Triage",
             "issue": i and {"id": i["id"], "dept_name": DEPT_NAMES.get(i["dept_id"]), "status": i["status"],
                             "report_count": report_count(con, i["id"]), "ack_due": i["ack_due"], "resolve_due": i["resolve_due"],
-                            "sla_reason": i["sla_reason"], "escalated": bool(i["escalated"]),
+                            "sla_reason": i["sla_reason"], "escalated": bool(i["escalated"]) and i["status"] in workflow.OPEN,  # only flag while still open
                             "closure_reason": i["closure_reason"], "evidence": i["evidence"]},
             "timeline": [{"at": e["created_at"], "status": e["to_status"],
                           "public_note": e["public_note"] or (e["reason"] if e["kind"] in ("escalation", "handover", "citizen") else None)}

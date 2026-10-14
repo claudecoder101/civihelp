@@ -41,7 +41,7 @@ function Stepper({ status, t }) {
         return (
           <li key={label} aria-current={state === 'now' ? 'step' : undefined} className="min-w-0">
             <div className={`h-2 rounded-full ${state === 'todo' ? 'bg-sunk' : status === 'Reopened' && state === 'now' ? 'bg-bad' : 'bg-navy'}`} />
-            <p className={`ta mt-2 text-[12.5px] leading-tight sm:text-sm ${state === 'now' ? 'font-bold text-ink' : state === 'done' ? 'text-ink' : 'text-ink-2'}`}>
+            <p className={`ta mt-2 text-[12.5px] leading-tight sm:text-sm ${state === 'now' ? 'whitespace-nowrap font-bold text-ink sm:whitespace-normal' : state === 'done' ? 'text-ink max-sm:sr-only' : 'text-ink-2 max-sm:sr-only'}`}>
               {i === 1 && status === 'Reopened' ? 'Reopened' : label}
             </p>
           </li>
@@ -53,7 +53,8 @@ function Stepper({ status, t }) {
 
 function ReportView({ r, t, reload }) {
   const issue = r.issue
-  const due = relDue(issue?.resolve_due)
+  // once resolved/closed the deadline no longer runs — don't show it as overdue
+  const due = issue && ['Resolved', 'Closed'].includes(issue.status) ? { text: 'Deadline stopped: marked resolved', overdue: false } : relDue(issue?.resolve_due)
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
       <div className="space-y-6">

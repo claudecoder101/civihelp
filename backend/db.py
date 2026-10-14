@@ -45,18 +45,21 @@ CREATE TRIGGER IF NOT EXISTS events_no_delete BEFORE DELETE ON events
   BEGIN SELECT RAISE(ABORT, 'audit events are append-only'); END;
 """
 
-KEY_PATH = os.path.join(os.path.dirname(__file__), ".audit_key")
+
+
+def key_file(name: str) -> str:
+    """Random secret kept in a gitignored file next to the code, created on first use."""
+    path = os.path.join(os.path.dirname(__file__), name)
+    if not os.path.exists(path):
+        with open(path, "w") as f:
+            f.write(secrets.token_hex(32))
+    with open(path) as f:
+        return f.read().strip()
 
 
 def _audit_key() -> bytes:
     """Server-held key: an insider who edits rows can't just recompute the chain (HMAC, not bare SHA-256)."""
-    if os.environ.get("CIVIC_AUDIT_KEY"):
-        return os.environ["CIVIC_AUDIT_KEY"].encode()
-    if not os.path.exists(KEY_PATH):
-        with open(KEY_PATH, "w") as f:
-            f.write(secrets.token_hex(32))
-    with open(KEY_PATH) as f:
-        return f.read().strip().encode()
+    return (os.environ.get("CIVIC_AUDIT_KEY") or key_file(".audit_key")).encode()
 
 
 HASH_FIELDS = ("issue_id", "report_id", "kind", "from_status", "to_status", "actor", "role",

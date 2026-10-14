@@ -38,7 +38,7 @@ export default function IssueDetail() {
           <Stat k="Priority" v={i.priority} note={`${i.report_count} linked report${i.report_count === 1 ? '' : 's'}`} />
           <Stat k="Bounces" v={i.bounce_count} note="Times rejected to another dept" bad={i.bounce_count > 1} />
         </dl>
-        {i.sla_reason && <p className="mt-4 rounded-md bg-sunk p-3 text-[15px]"><strong>Why this due time:</strong> {i.sla_reason}{i.rule_version ? <span className="text-ink-2"> (rules {i.rule_version})</span> : null}</p>}
+        {i.sla_reason && <p className="mt-4 rounded-md bg-sunk p-3 text-[15px]"><strong>Why this due time:</strong> {i.sla_reason}</p>}
         {(i.closure_reason || i.evidence) && (
           <p className="mt-3 rounded-md bg-ok-soft p-3 text-[15px]"><strong>Closure:</strong> {i.closure_reason}{i.evidence ? ` — evidence: ${i.evidence}` : ''}</p>
         )}
