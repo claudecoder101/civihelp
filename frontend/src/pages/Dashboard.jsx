@@ -140,7 +140,7 @@ function Hero({ d, gap }) {
 function Kpi({ k, v, note, tone, fmt }) {
   const color = tone === 'bad' ? 'text-bad' : tone === 'warn' ? 'text-[#a85f00]' : 'text-ink'
   return (
-    <div className="relative bg-card p-4 sm:p-5">
+    <div className="kpi relative bg-card p-4 sm:p-5">
       {tone && <span className={`absolute left-0 top-4 h-8 w-[3px] rounded-r ${tone === 'bad' ? 'bg-bad' : 'bg-[#c27a00]'}`} aria-hidden />}
       <p className="text-[13px] font-medium text-ink-2">{k}</p>
       <p className={`mt-1.5 font-mono text-[2rem] font-semibold leading-none tracking-tight ${color}`}><CountUp value={v} format={fmt} /></p>

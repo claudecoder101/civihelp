@@ -16,7 +16,7 @@ export default function Track() {
 
   return (
     <div className="rise">
-      <h1 className="ta text-[clamp(2rem,4.2vw,3.1rem)] font-bold leading-[1.05]">{t.trackTitle}</h1>
+      <h1 className="ta text-[clamp(1.8rem,3.4vw,2.55rem)] font-bold leading-[1.05]">{t.trackTitle}</h1>
       <p className="ta mt-3 max-w-2xl text-lg text-ink-2">{t.trackLede}</p>
       <form className="mt-6 flex max-w-xl flex-wrap items-end gap-3" onSubmit={e => { e.preventDefault(); const v = q.trim().toUpperCase(); if (v) nav(`/track/${v}`) }}>
         <div className="min-w-0 flex-1">

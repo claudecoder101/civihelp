@@ -31,7 +31,7 @@ function PublicLayout() {
           <span className="ta text-white/70">{t.emergencyNote}</span>
         </p>
       </div>
-      <header className="sticky top-0 z-[1100] border-b border-line/70 bg-card/90 backdrop-blur">
+      <header className="sticky top-0 z-[1100] border-b border-line/70 bg-card/60 backdrop-blur-xl backdrop-saturate-150">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
           <Wordmark sub="Coimbatore · civic issues pilot" />
           <div role="group" aria-label="Language" className="flex rounded-md bg-sunk p-0.5 max-md:ml-auto md:order-last">
@@ -49,8 +49,8 @@ function PublicLayout() {
           </nav>
         </div>
       </header>
-      <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-4 pb-20 pt-8 sm:pt-10"><Suspense fallback={<Loading />}><Outlet /></Suspense></main>
-      <footer className="border-t border-line bg-card">
+      <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-4 pb-16 pt-6 sm:pt-8"><Suspense fallback={<Loading />}><Outlet /></Suspense></main>
+      <footer className="border-t border-line/70 bg-card/60 backdrop-blur-xl">
         <div className="mx-auto grid max-w-6xl gap-6 px-4 py-8 text-sm text-ink-2 md:grid-cols-[1fr_2fr]">
           <div>
             <p className="display text-base font-bold text-ink">{APP_NAME}</p>

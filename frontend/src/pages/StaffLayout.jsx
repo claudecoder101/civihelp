@@ -81,7 +81,7 @@ export default function StaffLayout() {
 
 export function PageHead({ eyebrow, title, sub, children }) {
   return (
-    <div className="mb-7 flex flex-wrap items-end gap-4">
+    <div className="mb-6 flex flex-wrap items-end gap-4">
       <div className="min-w-0">
         {eyebrow && <p className="mb-1.5 font-mono text-[11.5px] font-medium uppercase tracking-[0.16em] text-[#c25a00]">{eyebrow}</p>}
         <h1 className="text-[clamp(1.7rem,2.8vw,2.35rem)] font-extrabold leading-[1.1] tracking-[-0.025em] [text-wrap:balance]">{title}</h1>

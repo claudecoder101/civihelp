@@ -5,12 +5,12 @@
   --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
   --font-display: "Anek Latin", "Noto Sans Tamil", "Public Sans", system-ui, sans-serif;
 
-  --color-paper: #f2f4f1;
+  --color-paper: #dde3eb;
   --color-card: #ffffff;
-  --color-sunk: #eaeeec;
+  --color-sunk: #e6ebf1;
   --color-ink: #0f1f36;
-  --color-ink-2: #45536a;
-  --color-line: #d3d9df;
+  --color-ink-2: #44526a;
+  --color-line: #cbd3dd;
   --color-navy: #16305f;
   --color-navy-2: #0e2247;
   --color-navy-soft: #e3e9f4;
@@ -87,11 +87,31 @@ button:not(:disabled), a, [role="button"], label[for] { cursor: pointer; }
 .btn:hover:not(:disabled) { transition-duration: .2s; }
 .btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 1px 0 rgb(255 255 255 / .12) inset, 0 10px 22px -10px rgb(22 48 95 / .7); }
 
-/* Page backdrop: faint navy wash top-right, saffron hint top-left — civic tricolour mood without loud colour */
-body { background:
-  radial-gradient(900px 420px at 92% -160px, rgb(22 48 95 / .09), transparent 70%),
-  radial-gradient(700px 320px at -10% -120px, rgb(255 153 51 / .07), transparent 70%),
-  var(--color-paper) no-repeat; }
+/* Page backdrop: dimmed slate base with slow-drifting blurred tricolour glows behind glass cards */
+html { background: linear-gradient(180deg, #d3dae4 0%, var(--color-paper) 420px) fixed; }
+body { background: transparent; }
+body::before, body::after { content: ""; position: fixed; z-index: -1; pointer-events: none; border-radius: 50%; filter: blur(80px); will-change: transform; }
+body::before { width: 46vw; height: 46vw; top: -14vw; right: -10vw; background: rgb(22 48 95 / .30); animation: drift-a 26s ease-in-out infinite alternate; }
+body::after { width: 38vw; height: 38vw; bottom: -16vw; left: -10vw; background: radial-gradient(circle at 35% 40%, rgb(255 153 51 / .26), transparent 60%), radial-gradient(circle at 70% 65%, rgb(19 136 8 / .18), transparent 60%); animation: drift-b 32s ease-in-out infinite alternate; }
+@keyframes drift-a { to { transform: translate(-9vw, 7vw) scale(1.12); } }
+@keyframes drift-b { to { transform: translate(10vw, -8vw) scale(1.15); } }
+
+/* Glass surfaces: cards let the glow show through a frosted blur */
+.card { background: rgb(255 255 255 / .82); -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4); }
+
+/* Dashboard KPI tiles: lift + accent glow on hover */
+.kpi { transition: background-color .2s, transform .2s; }
+.kpi:hover { background: #f6f8fc; }
+
+/* Chart entrances (CSS, so they finish even if the tab was hidden) */
+.recharts-bar-rectangle { transform-box: fill-box; transform-origin: left bottom; animation: bar-in .7s cubic-bezier(.2,.7,.2,1) both; }
+.recharts-bar-rectangle:nth-child(2) { animation-delay: .06s; } .recharts-bar-rectangle:nth-child(3) { animation-delay: .12s; }
+.recharts-bar-rectangle:nth-child(4) { animation-delay: .18s; } .recharts-bar-rectangle:nth-child(n+5) { animation-delay: .24s; }
+@keyframes bar-in { from { transform: scale(0); opacity: 0; } }
+.recharts-line-curve { stroke-dasharray: 3000; animation: line-draw 1.6s ease-out both; }
+@keyframes line-draw { from { stroke-dashoffset: 3000; } to { stroke-dashoffset: 0; } }
+
+@media (prefers-reduced-motion: reduce) { body::before, body::after { animation: none; } }
 
 /* Public nav: a bar slides in under the hovered link, stays full under the active one */
 .nav-link::after { content: ""; position: absolute; left: .75rem; right: .75rem; bottom: 3px; height: 2px; border-radius: 2px; background: var(--color-navy); transform: scaleX(0); transition: transform .2s ease-out; }

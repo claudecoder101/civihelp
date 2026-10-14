@@ -110,7 +110,7 @@ export default function Report() {
   return (
     <div ref={scope}>
       <header data-stagger className="max-w-3xl">
-        <h1 className="ta text-[clamp(2rem,4.2vw,3.1rem)] font-bold leading-[1.05] text-ink">{t.title}</h1>
+        <h1 className="ta text-[clamp(1.8rem,3.4vw,2.55rem)] font-bold leading-[1.05] text-ink">{t.title}</h1>
         <p className="ta mt-3 max-w-2xl text-lg text-ink-2">{t.lede}</p>
       </header>
 

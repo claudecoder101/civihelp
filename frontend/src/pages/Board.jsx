@@ -27,12 +27,12 @@ export default function Board() {
     <div ref={scope}>
       <header data-stagger className="max-w-3xl">
         <p className="eyebrow ta">{data.city} · {t.updated} {fmtTime(data.generated_at)}</p>
-        <h1 className="ta mt-1 text-[clamp(2rem,4.2vw,3.1rem)] font-bold leading-[1.05]">{t.boardTitle}</h1>
+        <h1 className="ta mt-1 text-[clamp(1.8rem,3.4vw,2.55rem)] font-bold leading-[1.05]">{t.boardTitle}</h1>
         <p className="ta mt-3 text-lg text-ink-2">{t.boardLede}</p>
       </header>
 
       {/* Headline: what departments claim vs what citizens confirmed */}
-      <section data-stagger className="card mt-8 overflow-hidden" aria-labelledby="gap-h">
+      <section data-stagger className="card mt-6 overflow-hidden" aria-labelledby="gap-h">
         <div className="grid gap-6 p-5 sm:p-7 md:grid-cols-[1fr_1.3fr] md:items-center">
           <div>
             <h2 id="gap-h" className="ta text-xl font-bold">{t.gapTitle}</h2>
@@ -67,7 +67,7 @@ export default function Board() {
         </div>
       </dl>
 
-      <section data-stagger className="card mt-8 p-5 sm:p-6" aria-labelledby="lb-h">
+      <section data-stagger className="card mt-6 p-5 sm:p-6" aria-labelledby="lb-h">
         <div className="flex flex-wrap items-center gap-3">
           <h2 id="lb-h" className="ta text-xl font-bold">{t.leaderboard}</h2>
           <div role="group" aria-label={t.sortBy} className="flex flex-wrap gap-1 rounded-md bg-sunk p-0.5 md:ml-auto">
@@ -103,7 +103,7 @@ export default function Board() {
         </ol>
       </section>
 
-      <section data-stagger className="card mt-8 p-5 sm:p-6" aria-labelledby="cat-h">
+      <section data-stagger className="card mt-6 p-5 sm:p-6" aria-labelledby="cat-h">
         <h2 id="cat-h" className="ta text-xl font-bold">{t.byCategory}</h2>
         <ul className="mt-4 space-y-3">
           {data.categories.map(c => (
