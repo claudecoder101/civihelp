@@ -8,6 +8,7 @@ import secrets
 from datetime import timedelta
 
 from db import add_event, iso, now, parse
+from engine import APP_NAME
 
 SECRET = os.environ.get("CIVIC_SECRET") or secrets.token_hex(32)  # tokens reset on restart if unset
 OTP_TTL, RESEND_COOLDOWN, MAX_ATTEMPTS, MAX_FAILS, LOCK_MIN, SESSION_H = 300, 30, 3, 5, 10, 8
@@ -55,7 +56,7 @@ def request_otp(con, mobile):
     con.execute("INSERT OR REPLACE INTO otps (mobile, code_hash, expires_at, attempts, last_sent, fails, locked_until) "
                 "VALUES (?,?,?,0,?,?,NULL)",
                 (mobile, _hash(mobile, code), iso(t + timedelta(seconds=OTP_TTL)), iso(t), o["fails"] if o else 0))
-    send_sms(con, mobile, f"CivicResolve login OTP for {s['name']}: {code}. Valid 5 min. Never share it.")
+    send_sms(con, mobile, f"{APP_NAME} login OTP for {s['name']}: {code}. Valid 5 min. Never share it.")
     return {"ok": True, "cooldown_s": RESEND_COOLDOWN}
 
 

@@ -1,3 +1,4 @@
+import { APP_NAME } from './brand'
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Navigate, NavLink, Outlet, Route, Routes } from 'react-router-dom'
 import { Icon, LangProvider, Loading, useLang, Wordmark } from './ui'
@@ -45,7 +46,7 @@ function PublicLayout() {
       </header>
       <main className="mx-auto max-w-6xl px-4 pb-16 pt-8"><Outlet /></main>
       <footer className="mx-auto max-w-6xl px-4 pb-10 text-sm text-ink-2">
-        CivicResolve demo pilot. Fictional wards and staff. Map data © OpenStreetMap contributors.
+        {APP_NAME} demo pilot. Fictional wards and staff. Map data © OpenStreetMap contributors.
       </footer>
     </div>
   )

@@ -120,3 +120,20 @@ def test_security_regressions(tmp_path, monkeypatch):
     assert c.get(f"/api/reports/{sub['id']}").status_code == 200
     assert c.post("/api/reports", json={"text": "bad photo upload", "lat": 11.02, "lng": 76.96,
                                          "photo_base64": "aGVsbG8="}).status_code == 400
+
+
+def test_high_confidence_auto_assign_then_live_duplicate(tmp_path, monkeypatch):
+    monkeypatch.setattr(db, "DB_PATH", str(tmp_path / "a.db"))
+    import seed
+    from fastapi.testclient import TestClient
+    import app as appmod
+    seed.reset_and_seed().close()
+    c = TestClient(appmod.app)
+    a = c.post("/api/reports", json={"text": "Water pipe burst near Vadavalli market, water wasting on road",
+                                     "category": "water", "lat": 11.0255, "lng": 76.9030}).json()
+    assert a["status"] == "Assigned" and a["issue_id"]
+    vague = c.post("/api/reports", json={"text": "please help, problem near my house", "lat": 11.0255, "lng": 76.9030}).json()
+    assert vague["status"] == "Triage"  # uncertain → a person decides
+    d = c.post("/api/reports/check", json={"text": "Pipeline leak at Vadavalli market, lots of water wasted",
+                                           "category": None, "lat": 11.0256, "lng": 76.9031}).json()["duplicates"]
+    assert d and d[0]["issue_id"] == a["issue_id"] and d[0]["probable"]

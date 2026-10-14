@@ -1,3 +1,4 @@
+import { APP_NAME } from './brand'
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -185,7 +186,7 @@ export function Wordmark({ sub }) {
     <Link to="/" className="flex items-center gap-2.5 rounded">
       <span className="grid size-9 place-items-center rounded-md bg-navy text-white"><Icon name="check" className="size-5" /></span>
       <span className="leading-tight">
-        <span className="block text-[17px] font-extrabold tracking-tight text-ink">CivicResolve</span>
+        <span className="block text-[17px] font-extrabold tracking-tight text-ink">{APP_NAME}</span>
         <span className="block text-[12.5px] text-ink-2">{sub}</span>
       </span>
     </Link>

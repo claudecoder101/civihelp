@@ -21,7 +21,7 @@ UPLOADS = os.path.join(HERE, "uploads")
 DIST = os.path.join(HERE, "..", "frontend", "dist")
 os.makedirs(UPLOADS, exist_ok=True)
 
-app = FastAPI(title="CivicResolve API")
+app = FastAPI(title=f"{engine.APP_NAME} API")
 _lock = threading.Lock()  # SQLite + a demo server: serialise writes, keep it simple
 
 
@@ -258,7 +258,18 @@ def submit(body: ReportIn, con=Depends(get_con)):
         steps = (f"You are now following issue {issue['id']} ({report_count(con, issue['id'])} citizens reported it). "
                  "You will get every update on it.")
     else:
-        steps = "A triage officer will confirm the right department, usually within a few hours. Track it any time with your ID."
+        # Confidence tiers: clear-cut reports go straight to the owning department; anything uncertain
+        # (medium/low routing, or a probable duplicate to decide on) waits for a triage officer.
+        _, routing, dups = analyse(con, body.text, body.category, body.lat, body.lng, t)
+        top = routing[0]
+        if top["tier"] == "high" and top["dept_id"] != "triage" and not any(d["probable"] for d in dups):
+            iid = make_issue(con, get_report(con, rid), top["dept_id"], "Routing rules (auto)", "system",
+                             "Auto-assigned (high confidence): " + "; ".join(top["reasons"][:2]), top["category"])
+            issue = get_issue(con, iid)
+            steps = (f"Sent straight to {top['dept_name']} — the rules were confident about who owns this. "
+                     f"Target: {issue['sla_reason']}. Track it any time with your ID.")
+        else:
+            steps = "A triage officer will confirm the right department, usually within a few hours. Track it any time with your ID."
     return {"id": f"{rid}-{code}", "status": issue["status"] if issue else "Triage", "ward": {"id": w[0], "name": w[1]},
             "next_steps": steps, "issue_id": issue["id"] if issue else None}
 
@@ -380,22 +391,27 @@ def create_issue(rid: str, body: CreateIssueIn, staff=Depends(require("triage", 
     r = unlinked_report(con, rid)
     if body.dept_id not in engine.DEPARTMENTS or body.dept_id == "triage":
         raise HTTPException(400, "Choose the department that will own and fix this issue")
-    cat = r["category"] or next((c for c, rule in engine.RULES.items() if rule[0] == body.dept_id), None)
+    iid = make_issue(con, r, body.dept_id, staff["name"], staff["role"], body.note)
+    return issue_summary(con, get_issue(con, iid))
+
+
+def make_issue(con, r, dept_id, actor, role, note=None, cat=None):
+    cat = r["category"] or cat or next((c for c, rule in engine.RULES.items() if rule[0] == dept_id), None)
     t, start = now(), parse(r["created_at"])  # SLA clock starts when the citizen reported
     ack_due, res_due, why = workflow.sla_for(cat, start)
     iid = next_id(con, "issues", "IS")
     con.execute("INSERT INTO issues (id, category, lat, lng, ward_id, dept_id, status, created_at, ack_due, resolve_due, "
                 "rule_version, sla_reason) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-                (iid, cat, r["lat"], r["lng"], r["ward_id"], body.dept_id, "Assigned", r["created_at"], ack_due, res_due,
+                (iid, cat, r["lat"], r["lng"], r["ward_id"], dept_id, "Assigned", r["created_at"], ack_due, res_due,
                  engine.RULE_VERSION, why))
-    add_event(con, issue_id=iid, report_id=rid, kind="assigned", from_status="Triage", to_status="Assigned",
-              actor=staff["name"], role=staff["role"], reason=body.note or f"Assigned to {DEPT_NAMES[body.dept_id]}",
-              public_note=f"Assigned to {DEPT_NAMES[body.dept_id]}", at=t)
+    add_event(con, issue_id=iid, report_id=r["id"], kind="assigned", from_status="Triage", to_status="Assigned",
+              actor=actor, role=role, reason=note or f"Assigned to {DEPT_NAMES[dept_id]}",
+              public_note=f"Assigned to {DEPT_NAMES[dept_id]}", at=t)
     con.execute("INSERT INTO links (report_id, issue_id, active, linked_by, reason, created_at) VALUES (?,?,1,?,?,?)",
-                (rid, iid, staff["name"], "Original report", iso(t)))
-    con.execute("UPDATE reports SET issue_id=? WHERE id=?", (iid, rid))
-    workflow.notify(con, iid, f"Assigned to {DEPT_NAMES[body.dept_id]}. Target: {why}.", t)
-    return issue_summary(con, get_issue(con, iid))
+                (r["id"], iid, actor, "Original report", iso(t)))
+    con.execute("UPDATE reports SET issue_id=? WHERE id=?", (iid, r["id"]))
+    workflow.notify(con, iid, f"Assigned to {DEPT_NAMES[dept_id]}. Target: {why}.", t)
+    return iid
 
 
 @app.post("/api/triage/{rid}/link")

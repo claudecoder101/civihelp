@@ -1,3 +1,4 @@
+import { APP_NAME } from './brand'
 const store = {
   get(k) { try { return localStorage.getItem(k) } catch { return null } },
   set(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v) } catch { /* storage blocked */ } },
@@ -24,7 +25,7 @@ export async function api(path, { method, body } = {}) {
   try {
     res = await fetch(path, { method: method || (body !== undefined ? 'POST' : 'GET'), headers, body: body !== undefined ? JSON.stringify(body) : undefined })
   } catch {
-    throw new ApiError('Cannot reach the CivicResolve server. Check your connection and try again.', 0)
+    throw new ApiError(`Cannot reach the ${APP_NAME} server. Check your connection and try again.`, 0)
   }
   const data = await res.json().catch(() => null)
   if (!res.ok) {
