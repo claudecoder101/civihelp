@@ -5,7 +5,7 @@ import { Icon, LangToggle, Wordmark, useLang } from '../ui'
 
 /* Demo identities. Citizens are fully simulated (no Aadhaar data requested or stored);
    staff use the real directory + OTP backend, auto-typed for the demo. */
-export const CITIZENS = [
+const CITIZENS = [
   { id: 'priya', name: 'Priya S.', area: 'RS Puram', mobile: '+919894021482', aadhaar: 'XXXX XXXX 4821', otp: '482193', lang: 'Tamil' },
   { id: 'arun', name: 'Arun K.', area: 'Gandhipuram', mobile: '+919943017356', aadhaar: 'XXXX XXXX 7356', otp: '735614', lang: 'English' },
 ]

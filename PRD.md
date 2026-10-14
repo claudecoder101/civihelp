@@ -161,7 +161,7 @@ Pitch: *"Rules where accountability matters, AI where language gets in the way."
 | Problem & SDG | Every clause of the statement → a working feature; SDG 16 + 11; real Indian data |
 | Technical | Live loop, hash-chained audit, OTP login, state machine, dispatch trail, tests passing |
 | Innovation | Tamil↔English linking, 30% citizen quorum, tamper-evident log |
-| Impact & feasibility | ₹0, runs offline on a laptop, Open311 endpoint, plugs into existing portals |
+| Impact & feasibility | ₹0, AI and data run locally on a laptop (works without internet after setup; map tiles fall back to a grid), Open311 endpoint, plugs into existing portals |
 | Presentation | Loading → landing → demo profiles; "break the chain live"; Evaluation numbers |
 
 PPT (8 slides): Problem with data → Who suffers → What exists & gaps → Civihelp → Live demo → Measured results → Impact & scale-up → Team + disclosure.

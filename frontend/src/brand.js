@@ -1,2 +1,2 @@
-// Working name — the team will pick the final one. Rename here and in backend/engine.py APP_NAME.
+// Product name, used in the UI. Keep in sync with backend/engine.py APP_NAME and frontend/index.html.
 export const APP_NAME = 'Civihelp'

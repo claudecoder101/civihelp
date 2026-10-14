@@ -25,7 +25,8 @@
   --color-navy-3: #2b4a85;
 }
 
-html { background: var(--color-paper); color: var(--color-ink); scroll-behavior: smooth; }
+/* Dimmed slate base; body::before/after add slow-drifting tricolour glows behind the glass cards */
+html { background: linear-gradient(180deg, #d3dae4 0%, var(--color-paper) 420px) fixed; color: var(--color-ink); scroll-behavior: smooth; }
 h1, h2, h3, .display { font-family: var(--font-display); font-stretch: 92%; letter-spacing: -0.012em; text-wrap: balance; }
 p { text-wrap: pretty; }
 .mono { font-family: var(--font-mono); }
@@ -42,8 +43,8 @@ button:not(:disabled), a, [role="button"], label[for] { cursor: pointer; }
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 44px; padding: 0 1.1rem; border-radius: 6px; font-weight: 600; transition: background-color .15s, color .15s, transform .1s; }
 .btn:active:not(:disabled) { transform: translateY(1px); }
 .btn:disabled { opacity: .55; cursor: not-allowed; }
-.btn-primary { background: var(--color-navy); color: #fff; }
-.btn-primary:hover:not(:disabled) { background: var(--color-navy-2); }
+.btn-primary { background: var(--color-navy); color: #fff; box-shadow: 0 1px 0 rgb(255 255 255 / .12) inset, 0 6px 16px -8px rgb(22 48 95 / .6); }
+.btn-primary:hover:not(:disabled) { background: var(--color-navy-2); transform: translateY(-1px); box-shadow: 0 1px 0 rgb(255 255 255 / .12) inset, 0 10px 22px -10px rgb(22 48 95 / .7); }
 .btn-ghost { background: var(--color-sunk); color: var(--color-ink); }
 .btn-ghost:hover:not(:disabled) { background: #dde3e0; }
 .btn-ok { background: var(--color-ok); color: #fff; }
@@ -59,17 +60,15 @@ button:not(:disabled), a, [role="button"], label[for] { cursor: pointer; }
 .leaflet-container { font-family: var(--font-sans); }
 
 @media (prefers-reduced-motion: reduce) {
+  body::before, body::after { animation: none !important; }
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
 @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 .rise { animation: rise .35s ease-out both; }
 
 /* Surfaces: one radius family, navy-tinted shadow, hairline edge instead of a grey border */
-.card { background: var(--color-card); border-radius: 12px; box-shadow: 0 0 0 1px rgb(15 31 54 / .06), 0 1px 2px rgb(22 48 95 / .05), 0 8px 24px -12px rgb(22 48 95 / .14); }
+.card { background: rgb(255 255 255 / .82); -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4); border-radius: 12px; box-shadow: 0 0 0 1px rgb(15 31 54 / .06), 0 1px 2px rgb(22 48 95 / .05), 0 8px 24px -12px rgb(22 48 95 / .14); }
 .eyebrow { font-size: .8125rem; font-weight: 600; color: var(--color-ink-2); }
-
-/* Ruled "public register" backdrop used behind page heads */
-.ledger { background-image: repeating-linear-gradient(to bottom, transparent 0 31px, rgb(22 48 95 / .06) 31px 32px); }
 
 /* Offline basemap drawn under the markers when OSM tiles cannot load */
 .map-offline.leaflet-container {
@@ -83,21 +82,14 @@ button:not(:disabled), a, [role="button"], label[for] { cursor: pointer; }
 /* Tracking-ID "stamp" */
 .stamp { font-family: var(--font-mono); font-weight: 500; letter-spacing: .02em; border: 2px dashed rgb(22 48 95 / .35); border-radius: 10px; }
 
-.btn-primary { box-shadow: 0 1px 0 rgb(255 255 255 / .12) inset, 0 6px 16px -8px rgb(22 48 95 / .6); }
 .btn:hover:not(:disabled) { transition-duration: .2s; }
-.btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 1px 0 rgb(255 255 255 / .12) inset, 0 10px 22px -10px rgb(22 48 95 / .7); }
 
-/* Page backdrop: dimmed slate base with slow-drifting blurred tricolour glows behind glass cards */
-html { background: linear-gradient(180deg, #d3dae4 0%, var(--color-paper) 420px) fixed; }
 body { background: transparent; }
 body::before, body::after { content: ""; position: fixed; z-index: -1; pointer-events: none; border-radius: 50%; filter: blur(80px); will-change: transform; }
 body::before { width: 46vw; height: 46vw; top: -14vw; right: -10vw; background: rgb(22 48 95 / .30); animation: drift-a 26s ease-in-out infinite alternate; }
 body::after { width: 38vw; height: 38vw; bottom: -16vw; left: -10vw; background: radial-gradient(circle at 35% 40%, rgb(255 153 51 / .26), transparent 60%), radial-gradient(circle at 70% 65%, rgb(19 136 8 / .18), transparent 60%); animation: drift-b 32s ease-in-out infinite alternate; }
 @keyframes drift-a { to { transform: translate(-9vw, 7vw) scale(1.12); } }
 @keyframes drift-b { to { transform: translate(10vw, -8vw) scale(1.15); } }
-
-/* Glass surfaces: cards let the glow show through a frosted blur */
-.card { background: rgb(255 255 255 / .82); -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4); }
 
 /* Dashboard KPI tiles: lift + accent glow on hover */
 .kpi { transition: background-color .2s, transform .2s; }
@@ -110,8 +102,6 @@ body::after { width: 38vw; height: 38vw; bottom: -16vw; left: -10vw; background:
 @keyframes bar-in { from { transform: scale(0); opacity: 0; } }
 .recharts-line-curve { stroke-dasharray: 3000; animation: line-draw 1.6s ease-out both; }
 @keyframes line-draw { from { stroke-dashoffset: 3000; } to { stroke-dashoffset: 0; } }
-
-@media (prefers-reduced-motion: reduce) { body::before, body::after { animation: none; } }
 
 /* Loader: bubbles merge, check draws, name settles, tricolour bar fills, status lines step through */
 .loader { position: fixed; inset: 0; z-index: 3000; display: grid; place-items: center; background: #0b1a36; transition: opacity .35s ease, visibility .35s; }

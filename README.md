@@ -118,9 +118,12 @@ Interop: `GET /open311/requests.json` (Open311-style).
 Built within the event window by the team, with AI assistance, disclosed in full as the rules require.
 
 **AI tools**
-- **Claude Code (Anthropic, Claude Opus 5.5)** — wrote most of the code, tests, docs and this README, ran the Playwright checks, under the team's direction and review. Plugins used: frontend-design, remember, Playwright.
+- **Claude Code (Anthropic) — main model Claude Opus 5.5** — wrote most of the code, tests, docs and this README under the team's direction and review, in the Claude desktop app.
+  - **AI sub-agents** launched by Claude Code: Claude Opus 5.5 (10 runs) and Claude Sonnet 5.5 (1 run) — research, parallel build, Explore/general-purpose code search, and review agents from the *agent-skills* plugin (code-reviewer, security-auditor, test-engineer).
+  - **Plugins / skills:** frontend-design, remember, Playwright, agent-skills, ponytail; built-in browser skill.
+  - **Tools:** Claude's built-in browser and Claude in Chrome (UI checks), Playwright (end-to-end tests and README screenshots), Claude Docs (planning notes), Claude visualize widget (logo and loader options shown to the team).
 - **ChatGPT (OpenAI)** — early brief / problem framing.
-- **intfloat/multilingual-e5-small** (Hugging Face, MIT) — the duplicate-matching model, run locally on CPU.
+- **intfloat/multilingual-e5-small** (Hugging Face, MIT licence) — the duplicate-matching model, run locally on CPU.
 
 **Libraries and services**
 - Backend: FastAPI, Uvicorn, Pydantic, sentence-transformers, Transformers, PyTorch (CPU), NumPy, scikit-learn, pytest, HTTPX.

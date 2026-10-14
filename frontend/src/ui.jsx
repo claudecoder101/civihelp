@@ -133,9 +133,9 @@ export const pct = (x, digits = 0) => x == null ? '—' : `${(x * 100).toFixed(d
 export const num = (x, digits = 1) => x == null ? '—' : Number(x).toFixed(digits)
 
 /* ---------- resident language toggle (UI labels only) ---------- */
-export const dict = {
+const dict = {
   en: {
-    report: 'Report an issue', track: 'Track a report', board: 'City board', about: 'How it works', staff: 'Staff login', emergency: 'Emergency? Call 112',
+    report: 'Report an issue', track: 'Track a report', board: 'City board', about: 'How it works', emergency: 'Emergency? Call 112',
     emergencyNote: 'This service is for non-emergency civic issues only.',
     title: 'Report a civic issue', lede: 'Tell us what is wrong and where. You get a tracking ID and updates until a citizen confirms it is fixed.',
     describe: 'What is the problem?', describeHint: 'Write in English or Tamil.', minChars: 'Describe the problem in at least 10 characters to continue.',
@@ -148,7 +148,7 @@ export const dict = {
     dupWait: 'Start describing the problem and we will check for similar reports nearby, in English and Tamil.',
     likelySame: 'Likely the same issue', possiblySame: 'Possibly the same', crossLang: 'Tamil ↔ English',
     yourReport: 'Your report', existing: 'Already reported', meaning: 'Meaning', distance: 'Distance', time: 'Time apart',
-    mAway: m => `${m} m away`, hApart: h => `${h} h apart`, whyMatch: 'Why we think so',
+    whyMatch: 'Why we think so',
     routeTitle: 'Likely department', routeLede: 'Suggested from your description and location. Staff confirm it.',
     tier: { high: 'High confidence', medium: 'Medium · staff confirm', low: 'Low · staff review' },
     received: 'Report received', followed: 'You are now following this issue', yourId: 'Your tracking ID',
@@ -168,13 +168,11 @@ export const dict = {
     gapTitle: 'Closed by departments vs confirmed by citizens', closedRate: 'Marked closed', verifiedRate: 'Citizen-verified',
     gapNote: g => `${g} percentage points of “closed” work have not been confirmed by any citizen.`,
     leaderboard: 'Department record', sortBy: 'Sort by', sortOverdue: 'Most overdue', sortResolve: 'Slowest to resolve', sortVerified: 'Lowest verified',
-    resolved: 'Resolved', verified: 'Verified', ack: 'Median acknowledge', bounces: 'Bounced', hours: h => h == null ? '—' : `${h < 10 ? h.toFixed(1) : Math.round(h)} h`,
+    resolved: 'Resolved', ack: 'Median acknowledge', bounces: 'Bounced', hours: h => h == null ? '—' : `${h < 10 ? h.toFixed(1) : Math.round(h)} h`,
     byCategory: 'Open issues by category', boardFoot: 'Numbers come straight from the issue log. Demo pilot with fictional data.',
-    footer: 'Demo pilot for Coimbatore. Wards, staff and reports are fictional.', footerMap: 'Map data © OpenStreetMap contributors.',
-    pillars: ['Tamil and English reports of the same problem are linked, never closed as duplicates.', 'An issue closes only when 30% of its reporters confirm the fix.', 'Every status change is written to a tamper-evident log.'],
   },
   ta: {
-    report: 'புகார் அளிக்க', track: 'புகாரைக் கண்காணிக்க', board: 'நகரப் பலகை', about: 'எப்படிச் செயல்படுகிறது', staff: 'அலுவலர் உள்நுழைவு', emergency: 'அவசரமா? 112 ஐ அழைக்கவும்',
+    report: 'புகார் அளிக்க', track: 'புகாரைக் கண்காணிக்க', board: 'நகரப் பலகை', about: 'எப்படிச் செயல்படுகிறது', emergency: 'அவசரமா? 112 ஐ அழைக்கவும்',
     emergencyNote: 'இந்தச் சேவை அவசரமில்லாத குடிமைப் பிரச்சினைகளுக்கு மட்டும்.',
     title: 'குடிமைப் பிரச்சினையைப் புகாரளிக்கவும்', lede: 'என்ன பிரச்சினை, எங்கே என்று சொல்லுங்கள். கண்காணிப்பு எண் கிடைக்கும்; சரிசெய்யப்பட்டதைக் குடிமக்கள் உறுதிசெய்யும் வரை தகவல் வரும்.',
     describe: 'என்ன பிரச்சினை?', describeHint: 'தமிழ் அல்லது ஆங்கிலத்தில் எழுதலாம்.', minChars: 'தொடர, பிரச்சினையைக் குறைந்தது 10 எழுத்துகளில் விவரிக்கவும்.',
@@ -187,7 +185,7 @@ export const dict = {
     dupWait: 'பிரச்சினையை விவரிக்கத் தொடங்குங்கள்; அருகிலுள்ள இதுபோன்ற புகார்களைத் தமிழிலும் ஆங்கிலத்திலும் சரிபார்ப்போம்.',
     likelySame: 'அநேகமாக இதே பிரச்சினை', possiblySame: 'இதுவாக இருக்கலாம்', crossLang: 'தமிழ் ↔ ஆங்கிலம்',
     yourReport: 'உங்கள் புகார்', existing: 'ஏற்கனவே உள்ள புகார்', meaning: 'பொருள்', distance: 'தூரம்', time: 'நேர இடைவெளி',
-    mAway: m => `${m} மீ தொலைவில்`, hApart: h => `${h} மணி நேர இடைவெளி`, whyMatch: 'ஏன் இப்படிக் கருதுகிறோம்',
+    whyMatch: 'ஏன் இப்படிக் கருதுகிறோம்',
     routeTitle: 'பொறுப்பான துறை (பரிந்துரை)', routeLede: 'உங்கள் விவரம் மற்றும் இடத்தின் அடிப்படையில். அலுவலர்கள் உறுதி செய்வர்.',
     tier: { high: 'அதிக நம்பிக்கை', medium: 'நடுத்தரம் · அலுவலர் உறுதிசெய்வர்', low: 'குறைவு · அலுவலர் பரிசீலிப்பர்' },
     received: 'புகார் பெறப்பட்டது', followed: 'இப்போது இந்தப் பிரச்சினையைப் பின்தொடர்கிறீர்கள்', yourId: 'உங்கள் கண்காணிப்பு எண்',
@@ -207,10 +205,8 @@ export const dict = {
     gapTitle: 'துறைகள் மூடியவை vs குடிமக்கள் உறுதிசெய்தவை', closedRate: 'மூடப்பட்டதாகக் குறிக்கப்பட்டவை', verifiedRate: 'குடிமக்கள் உறுதிசெய்தவை',
     gapNote: g => `“மூடப்பட்ட” பணிகளில் ${g} சதவீதப் புள்ளிகளை இன்னும் எந்தக் குடிமகனும் உறுதிசெய்யவில்லை.`,
     leaderboard: 'துறைவாரியான செயல்பாடு', sortBy: 'வரிசைப்படுத்து', sortOverdue: 'அதிகத் தாமதம்', sortResolve: 'மெதுவான தீர்வு', sortVerified: 'குறைந்த உறுதிப்படுத்தல்',
-    resolved: 'தீர்க்கப்பட்டவை', verified: 'உறுதிசெய்யப்பட்டவை', ack: 'ஏற்க ஆன இடைநிலை நேரம்', bounces: 'திருப்பி அனுப்பியவை', hours: h => h == null ? '—' : `${h < 10 ? h.toFixed(1) : Math.round(h)} மணி`,
+    resolved: 'தீர்க்கப்பட்டவை', ack: 'ஏற்க ஆன இடைநிலை நேரம்', bounces: 'திருப்பி அனுப்பியவை', hours: h => h == null ? '—' : `${h < 10 ? h.toFixed(1) : Math.round(h)} மணி`,
     byCategory: 'வகைவாரியாக நிலுவையில் உள்ள பிரச்சினைகள்', boardFoot: 'எண்கள் நேரடியாகப் பிரச்சினைப் பதிவேட்டிலிருந்து வருகின்றன. கற்பனைத் தரவுடன் கூடிய முன்னோட்டத் திட்டம்.',
-    footer: 'கோயம்புத்தூருக்கான முன்னோட்டத் திட்டம். வார்டுகள், அலுவலர்கள், புகார்கள் அனைத்தும் கற்பனையானவை.', footerMap: 'வரைபடத் தரவு © OpenStreetMap பங்களிப்பாளர்கள்.',
-    pillars: ['ஒரே பிரச்சினை பற்றிய தமிழ், ஆங்கிலப் புகார்கள் இணைக்கப்படும்; நகல் என்று மூடப்படாது.', 'புகாரளித்தவர்களில் 30% பேர் உறுதிசெய்தால் மட்டுமே பிரச்சினை மூடப்படும்.', 'ஒவ்வொரு நிலை மாற்றமும் மாற்ற முடியாத பதிவேட்டில் எழுதப்படும்.'],
   },
 }
 
@@ -271,27 +267,27 @@ Object.assign(dict.en, {
   heroEyebrow: 'Coimbatore civic pilot · SDG 11 & 16', heroTitle: 'Report once. Track every step. Confirm it’s fixed.',
   heroLede: 'Tamil and English reports of the same problem become one issue. Every hand-off between departments is tracked, and it closes only when citizens confirm the fix.',
   enter: 'Enter', aiMatch: 'AI meaning match', sameIssue: 'Same issue', linkedOne: 'Merged into one issue', tracking: n => `${n} citizens tracking`,
-  trust: ['₹0 · open source', 'Runs offline', 'Tamper-evident log'],
+  trust: ['₹0 · open source', 'AI runs locally', 'Tamper-evident log'],
   menuTitle: 'How are you entering today?', menuLede: 'Choose your side. You can switch language any time.',
   citizen: 'Citizen', citizenLede: 'Report a problem, follow it between departments, confirm the fix.',
   citizenPoints: ['Report in Tamil or English', 'See every department hand-off', 'Confirm it’s fixed, or reopen it'],
   staffSide: 'Staff', staffLede: 'Triage, dispatch and resolve work for your department.',
   staffPoints: ['Review reports the AI linked across languages', 'Send and receive work between departments', 'Deadlines, escalation and audit log'],
-  continueCitizen: 'Continue as citizen', continueStaff: 'Continue as staff', trackNoLogin: 'Track a report without logging in',
-  myReports: 'My reports', signOut: 'Sign out', mainMenu: 'Main menu', skip: 'Skip',
+  continueCitizen: 'Continue as citizen', continueStaff: 'Continue as staff', 
+  signOut: 'Sign out', mainMenu: 'Main menu', skip: 'Skip',
   loading: ['தமிழ் + English…', 'Linking reports…', 'Verified ✓'],
 })
 Object.assign(dict.ta, {
   heroEyebrow: 'கோயம்புத்தூர் குடிமைச் சேவை முன்னோட்டம் · SDG 11 & 16', heroTitle: 'ஒருமுறை புகாரளியுங்கள். ஒவ்வொரு படியையும் கண்காணியுங்கள். சரியானதை உறுதிசெய்யுங்கள்.',
   heroLede: 'ஒரே பிரச்சினை பற்றிய தமிழ், ஆங்கிலப் புகார்கள் ஒரே பிரச்சினையாக இணைக்கப்படும். துறைகளுக்கு இடையிலான ஒவ்வொரு ஒப்படைப்பும் கண்காணிக்கப்படும்; குடிமக்கள் உறுதிசெய்த பின்பே மூடப்படும்.',
   enter: 'உள்ளே செல்ல', aiMatch: 'AI பொருள் ஒப்பீடு', sameIssue: 'ஒரே பிரச்சினை', linkedOne: 'ஒரே பிரச்சினையாக இணைக்கப்பட்டது', tracking: n => `${n} பேர் கண்காணிக்கின்றனர்`,
-  trust: ['₹0 · திறந்த மூலம்', 'இணையம் இல்லாமலும் இயங்கும்', 'மாற்ற முடியாத பதிவேடு'],
+  trust: ['₹0 · திறந்த மூலம்', 'AI உள்ளூரிலேயே இயங்கும்', 'மாற்ற முடியாத பதிவேடு'],
   menuTitle: 'இன்று எப்படி உள்நுழைகிறீர்கள்?', menuLede: 'உங்கள் பக்கத்தைத் தேர்ந்தெடுக்கவும். மொழியை எப்போது வேண்டுமானாலும் மாற்றலாம்.',
   citizen: 'குடிமகன்', citizenLede: 'பிரச்சினையைப் புகாரளித்து, துறைகளுக்கு இடையே பின்தொடர்ந்து, சரியானதை உறுதிசெய்யுங்கள்.',
   citizenPoints: ['தமிழ் அல்லது ஆங்கிலத்தில் புகாரளிக்கவும்', 'ஒவ்வொரு துறை ஒப்படைப்பையும் பார்க்கவும்', 'சரி செய்யப்பட்டதை உறுதிசெய்யவும் அல்லது மீண்டும் திறக்கவும்'],
   staffSide: 'அலுவலர்', staffLede: 'உங்கள் துறைக்கான பணிகளைப் பரிசீலித்தல், அனுப்புதல், தீர்த்தல்.',
   staffPoints: ['AI இணைத்த புகார்களைப் பரிசீலிக்கவும்', 'துறைகளுக்கு இடையே பணியை அனுப்பவும், பெறவும்', 'காலக்கெடு, மேல்முறையீடு, தணிக்கைப் பதிவு'],
-  continueCitizen: 'குடிமகனாகத் தொடர', continueStaff: 'அலுவலராகத் தொடர', trackNoLogin: 'உள்நுழையாமல் புகாரைக் கண்காணிக்க',
-  myReports: 'என் புகார்கள்', signOut: 'வெளியேறு', mainMenu: 'முதன்மை மெனு', skip: 'தவிர்',
+  continueCitizen: 'குடிமகனாகத் தொடர', continueStaff: 'அலுவலராகத் தொடர', 
+  signOut: 'வெளியேறு', mainMenu: 'முதன்மை மெனு', skip: 'தவிர்',
   loading: ['தமிழ் + English…', 'புகார்கள் இணைக்கப்படுகின்றன…', 'உறுதிசெய்யப்பட்டது ✓'],
 })
