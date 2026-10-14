@@ -10,7 +10,7 @@ const Report = lazy(() => import('./pages/Report'))
 const Track = lazy(() => import('./pages/Track'))
 const Board = lazy(() => import('./pages/Board'))
 const About = lazy(() => import('./pages/About'))
-const StaffLogin = lazy(() => import('./pages/StaffLogin'))
+const Login = lazy(() => import('./pages/Login'))
 const StaffLayout = lazy(() => import('./pages/StaffLayout'))
 const Triage = lazy(() => import('./pages/Triage'))
 const Issues = lazy(() => import('./pages/Issues'))
@@ -53,8 +53,7 @@ export default function App() {
           <Routes>
             <Route index element={<Landing />} />
             <Route path="start" element={<Menu />} />
-            <Route path="login/staff" element={<StaffLogin />} />
-            <Route path="login/citizen" element={<Navigate to="/report" replace />} />
+            <Route path="login/:kind" element={<Login />} />
             <Route element={<CitizenLayout />}>
               <Route path="report" element={<Report />} />
               <Route path="track" element={<Track />} />

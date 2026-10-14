@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { Marker, useMap, useMapEvents } from 'react-leaflet'
 import { gsap } from 'gsap'
 import { useGSAP } from '@gsap/react'
-import { api } from '../api'
+import { api, getCitizen } from '../api'
 import { reducedMotion, useStagger } from '../anim'
 import { CityMap } from '../map'
 import { Badge, ErrorBox, Icon, Loading, useLang, useMeta } from '../ui'
@@ -45,7 +45,8 @@ export default function Report() {
   const [category, setCategory] = useState(null)
   const [pos, setPos] = useState(null)
   const [landmark, setLandmark] = useState('')
-  const [contact, setContact] = useState('')
+  const citizen = getCitizen()
+  const [contact, setContact] = useState(citizen?.mobile || '')
   const [photo, setPhoto] = useState(null)
   const [photoErr, setPhotoErr] = useState(null)
   const [check, setCheck] = useState({ data: null, loading: false, error: null })
@@ -100,6 +101,8 @@ export default function Report() {
     if (meta) setPos([meta.city.lat, meta.city.lng])
   }
 
+  // Reporting needs a (simulated) citizen login: blocks anonymous spam and fake reports.
+  if (!citizen) return <Navigate to="/login/citizen" replace state={{ from: '/report' }} />
   if (done) return <Success done={done} t={t} onAnother={reset} />
   if (metaError) return <ErrorBox error={metaError} onRetry={() => location.reload()} />
   if (!meta || !pos) return <Loading />
