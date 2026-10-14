@@ -23,7 +23,7 @@
 | 17 | v2 logo (அ + A bubbles) + loading screen + landing + main menu | done | see log |
 | 18 | App shell: sidebar + top bar (citizen + staff); remove staff↔public links | done | see log |
 | 19 | Demo login: 4 profiles, mock Aadhaar, staff auto-OTP (~3 s, Skip), separation, Your access; reporting needs login | done — Playwright: gate, refusal, 3 profiles, skip 93 ms | see log |
-| 20 | Dispatch trail + Dispatch page + My work + guides | todo | |
+| 20 | Dispatch trail + Dispatch page + My work + guides | done — 36 tests pass; trail from audit log | see log |
 | 21 | AI match panel | todo | |
 | 22 | 30% reporter quorum (backend + tests + UI) | todo | |
 | 23 | Try-a-sample buttons (Report, Track) | todo | |

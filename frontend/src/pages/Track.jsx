@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { api } from '../api'
 import { Badge, ErrorBox, Icon, Loading, fmtTime, relDue, statusTone, useApi, useLang } from '../ui'
+import { DispatchTrail } from '../dispatch'
 
 const Status = ({ s, t }) => <Badge tone={statusTone(s)}><span className="ta">{t.status[s] || s}</span></Badge>
 
@@ -55,6 +56,7 @@ function Stepper({ status, t }) {
 }
 
 function ReportView({ r, t, reload }) {
+  const { lang } = useLang()
   const issue = r.issue
   // once resolved/closed the deadline no longer runs — don't show it as overdue
   const due = issue && ['Resolved', 'Closed'].includes(issue.status) ? { text: t.stopped, overdue: false } : (d => d.text === '—' ? d : { ...d, text: d.overdue ? t.overdueBy(d.text.replace(/ overdue$/, '')) : t.dueIn(d.text.replace(/^in /, '')) })(relDue(issue?.resolve_due))
@@ -74,6 +76,13 @@ function ReportView({ r, t, reload }) {
         </section>
 
         {r.can_confirm && <Confirm id={r.id} t={t} onDone={reload} />}
+
+        {r.dispatch && (
+          <section className="card p-5 sm:p-6">
+            <h2 className="ta mb-3 flex items-center gap-2 text-lg font-bold"><Icon name="route" className="size-5 text-navy" />{lang === 'ta' ? 'துறைகளுக்கு இடையிலான பயணம்' : 'Where your report has been'}</h2>
+            <DispatchTrail d={r.dispatch} lang={lang} />
+          </section>
+        )}
 
         {issue && (
           <section className="card grid gap-px overflow-hidden bg-line/60 sm:grid-cols-3">

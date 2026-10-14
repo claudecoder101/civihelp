@@ -1,4 +1,5 @@
 """Issue state machine: who may move an issue from which status to which, and what each move requires."""
+import re
 from datetime import timedelta
 
 from db import add_event, iso, now, parse
@@ -137,3 +138,31 @@ def escalate_overdue(con, at=None):
             notify(con, i["id"], "Your complaint is overdue and has been escalated to a supervisor.", at)
             n += 1
     return n
+
+
+def dispatch_trail(con, issue):
+    """Hops between departments, rebuilt from the audit log.
+    Sent = assigned / handed over; Received = the receiving department acknowledged it."""
+    evs = con.execute("SELECT * FROM events WHERE issue_id=? AND kind IN ('assigned','created','handover','status') ORDER BY id",
+                      (issue["id"],)).fetchall()
+    hops = []
+    for e in evs:
+        if e["kind"] in ("assigned", "created"):
+            m = re.search(r"(?:Assigned|Routed) to (.+?)(?: \(|$)", e["public_note"] or "") or re.search(r"(?:Assigned|Routed) to (.+?)(?: \(|$)", e["reason"] or "")
+            to = m.group(1).strip() if m else DEPARTMENTS[issue["dept_id"]][0]
+            hops.append({"from": "Triage desk", "to": to, "sent_at": e["created_at"], "sent_by": e["actor"], "reason": e["reason"],
+                         "sent_hash": e["hash"], "received_at": None, "received_by": None, "received_hash": None})
+        elif e["kind"] == "handover":
+            reason, _, to = (e["reason"] or "").partition(" → handed to ")
+            hops.append({"from": hops[-1]["to"] if hops else "Triage desk", "to": to, "sent_at": e["created_at"], "sent_by": e["actor"],
+                         "reason": reason, "sent_hash": e["hash"], "received_at": None, "received_by": None, "received_hash": None})
+        elif e["to_status"] == "Acknowledged" and hops and not hops[-1]["received_at"]:
+            hops[-1].update(received_at=e["created_at"], received_by=e["actor"], received_hash=e["hash"])
+    owner = DEPARTMENTS[issue["dept_id"]][0]
+    nxt = {"Assigned": (f"{owner} to receive (acknowledge) it", issue["ack_due"]),
+           "Reopened": (f"{owner} to receive it again", issue["ack_due"]),
+           "Acknowledged": ("Start work", issue["resolve_due"]),
+           "In progress": ("Resolve with evidence", issue["resolve_due"]),
+           "Resolved": ("Citizens confirm the fix", None),
+           "Closed": ("Done — citizen-verified" if issue["verified"] else "Done", None)}.get(issue["status"], ("—", None))
+    return {"hops": hops, "owner": owner, "status": issue["status"], "next_step": nxt[0], "next_due": nxt[1]}

@@ -307,7 +307,14 @@ def track(rid: str, con=Depends(get_con)):
                          for e in sorted(ev, key=lambda e: e["id"])],
             "notifications": [dict(n) for n in con.execute(
                 "SELECT at, message FROM notifications WHERE report_id=? ORDER BY id DESC", (r["id"],))],
+            "dispatch": public_trail(workflow.dispatch_trail(con, i)) if i else None,
             "can_confirm": bool(i and i["status"] == "Resolved")}
+
+
+def public_trail(trail):
+    # Citizens see departments and times; officer names and hashes stay on the staff side.
+    keep = ("from", "to", "sent_at", "received_at")
+    return {**trail, "hops": [{k: h[k] for k in keep} for h in trail["hops"]]}
 
 
 @app.post("/api/reports/{rid}/confirm")
@@ -468,7 +475,29 @@ def issue_detail(iid: str, staff=Depends(current_staff), con=Depends(get_con)):
             "closure_reason": i["closure_reason"], "evidence": i["evidence"],
             "verified": None if i["verified"] is None else bool(i["verified"]),
             "reports": [dict(r) for r in reps], "events": [dict(e) for e in evs],
+            "dispatch": workflow.dispatch_trail(con, i),
             "allowed_actions": workflow.allowed_actions(i, staff)}
+
+
+@app.get("/api/dispatch")
+def dispatch(staff=Depends(current_staff), con=Depends(get_con)):
+    """Work moving between departments, from the signed-in officer's point of view (triage/supervisors see the triage desk)."""
+    workflow.escalate_overdue(con)
+    mine = DEPT_NAMES.get(staff["dept_id"]) if staff["role"] == "officer" else "Triage desk"
+    t, out = now(), {"incoming": [], "received": [], "in_progress": [], "awaiting_citizens": [], "sent_waiting": []}
+    for i in con.execute("SELECT * FROM issues WHERE status NOT IN ('Closed') ORDER BY priority DESC, created_at").fetchall():
+        trail = workflow.dispatch_trail(con, i)
+        row = {**issue_summary(con, i, t), "last_hop": trail["hops"][-1] if trail["hops"] else None,
+               "next_step": trail["next_step"], "next_due": trail["next_due"]}
+        ours = staff["role"] != "officer" or i["dept_id"] == staff["dept_id"]
+        if ours and staff["role"] == "officer":
+            key = {"Assigned": "incoming", "Reopened": "incoming", "Acknowledged": "received",
+                   "In progress": "in_progress", "Resolved": "awaiting_citizens"}.get(i["status"])
+            if key:
+                out[key].append(row)
+        if i["status"] == "Assigned" and row["last_hop"] and row["last_hop"]["from"] == mine:
+            out["sent_waiting"].append(row)
+    return {"viewpoint": mine, **out}
 
 
 @app.post("/api/issues/{iid}/transition")

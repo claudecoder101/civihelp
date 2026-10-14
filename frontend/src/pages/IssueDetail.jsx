@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { api } from '../api'
 import { Badge, ErrorBox, Icon, Loading, StatusBadge, fmtTime, relDue, useApi, useMeta } from '../ui'
 import { gsap, reduced, settle, useEnter, useGSAP } from '../staff/motion'
+import { DispatchTrail, Guides } from '../dispatch'
 
 const CLOSURE = ['Repaired', 'No action needed', 'Referred to other authority', 'Could not resolve']
 const actionStyle = { Resolved: 'btn-ok', Closed: 'btn-ok', Rejected: 'btn-bad' }
@@ -31,6 +32,13 @@ export default function IssueDetail() {
   const ack = relDue(i.ack_due), res = relDue(i.resolve_due)
   const closed = ['Resolved', 'Closed'].includes(i.status)
 
+  const jump = hash => {
+    const el = document.getElementById(`ev-${hash.slice(0, 12)}`)
+    if (!el) return
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    el.classList.add('bg-warn-soft'); setTimeout(() => el.classList.remove('bg-warn-soft'), 1600)
+  }
+
   return (
     <div ref={scope}>
       <Back />
@@ -56,6 +64,13 @@ export default function IssueDetail() {
           <p className="mt-3 rounded-lg bg-ok-soft p-3 text-[15px]"><strong>Closure:</strong> {i.closure_reason}{i.evidence ? ` — evidence: ${i.evidence}` : ''}</p>
         )}
       </header>
+
+      <section data-enter className="mt-6 rounded-xl bg-card p-5 shadow-[0_1px_0_rgba(14,34,71,.04),0_10px_28px_-18px_rgba(14,34,71,.25)] ring-1 ring-line/60 sm:p-6">
+        <h2 className="flex items-center gap-2 text-lg font-bold"><Icon name="route" className="size-5 text-navy" />Dispatch trail</h2>
+        <p className="mb-4 text-[14.5px] text-ink-2">Every hand-off between departments: when it was sent, when it was received and by whom. Click a stamp to see its audit event.</p>
+        <DispatchTrail d={i.dispatch} onJump={jump} />
+        <details className="mt-4"><summary className="cursor-pointer text-[14px] font-semibold text-navy">How to send, receive and track</summary><div className="mt-3"><Guides /></div></details>
+      </section>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <div className="space-y-6">
@@ -96,7 +111,7 @@ export default function IssueDetail() {
               <span className="font-mono text-[12px] text-ink-2">GENESIS</span>
             </li>
             {i.events.map((e, n) => (
-              <li key={e.id} data-event className="relative rounded-lg pb-5 pl-9 last:pb-0">
+              <li key={e.id} id={`ev-${e.hash?.slice(0, 12)}`} data-event className="relative scroll-mt-24 rounded-lg pb-5 pl-9 transition-colors duration-700 last:pb-0">
                 {n < i.events.length - 1 && <span className="absolute left-[11px] top-7 h-[calc(100%-1.25rem)] w-[2px] bg-[repeating-linear-gradient(to_bottom,var(--color-navy)_0_4px,transparent_4px_8px)] opacity-40" aria-hidden />}
                 <span className={`absolute left-0 top-0.5 grid size-6 place-items-center rounded-md font-mono text-[10px] font-semibold ${e.to_status ? 'bg-navy text-white' : 'bg-navy-soft text-navy'}`} aria-hidden>{n + 1}</span>
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">

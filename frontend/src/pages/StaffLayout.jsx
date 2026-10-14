@@ -5,7 +5,8 @@ import Shell from '../shell'
 
 const links = [
   ['/staff/triage', 'Triage', 'inbox'],
-  ['/staff/issues', 'Issues', 'list'],
+  ['/staff/dispatch', 'Dispatch & my work', 'route'],
+  ['/staff/issues', 'All issues', 'list'],
   ['/staff/dashboard', 'Dashboard', 'chart'],
   ['/staff/hotspots', 'Hotspots', 'map'],
   ['/staff/evaluation', 'Evaluation', 'gauge'],
@@ -29,10 +30,9 @@ export default function StaffLayout() {
 
   const logout = () => { setSession(null); nav('/start', { replace: true }) }
   const visible = links.filter(([p]) => p !== '/staff/triage' || staff?.role !== 'officer')
-  const primary = staff?.role === 'officer' ? { to: '/staff/issues', label: 'My work', icon: 'inbox' } : { to: '/staff/triage', label: 'Triage queue', icon: 'inbox' }
 
   return (
-    <Shell variant="dark" home="/staff" sub="Staff workbench" links={visible} primary={primary} mainId="staff-main" onLogout={logout}
+    <Shell variant="dark" home="/staff" sub="Staff workbench" links={visible} mainId="staff-main" onLogout={logout}
       user={staff && { name: staff.name, line: staff.designation, place: staff.dept_name || 'All departments', badge: staff.role }}>
       <Outlet context={staff} />
     </Shell>

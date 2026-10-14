@@ -1,6 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Navigate, Outlet, Route, Routes, useNavigate } from 'react-router-dom'
-import { getCitizen, setCitizen } from './api'
+import { getCitizen, getStaff, setCitizen } from './api'
 import Shell from './shell'
 import { Icon, LangProvider, LangToggle, Loading, useLang } from './ui'
 import Landing from './pages/Landing'
@@ -19,6 +19,10 @@ const Dashboard = lazy(() => import('./pages/Dashboard'))
 const Hotspots = lazy(() => import('./pages/Hotspots'))
 const Evaluation = lazy(() => import('./pages/Evaluation'))
 const Audit = lazy(() => import('./pages/Audit'))
+const Dispatch = lazy(() => import('./pages/Dispatch'))
+
+// Officers start on their own work; triage, supervisors and admins on the triage queue.
+const StaffHome = () => <Navigate to={getStaff()?.role === 'officer' ? 'dispatch' : 'triage'} replace />
 
 function CitizenLayout() {
   const { t } = useLang()
@@ -63,8 +67,9 @@ export default function App() {
             </Route>
             <Route path="staff/login" element={<Navigate to="/login/staff" replace />} />
             <Route path="staff" element={<StaffLayout />}>
-              <Route index element={<Navigate to="triage" replace />} />
+              <Route index element={<StaffHome />} />
               <Route path="triage" element={<Triage />} />
+              <Route path="dispatch" element={<Dispatch />} />
               <Route path="issues" element={<Issues />} />
               <Route path="issues/:id" element={<IssueDetail />} />
               <Route path="dashboard" element={<Dashboard />} />

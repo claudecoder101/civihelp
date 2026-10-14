@@ -138,6 +138,21 @@ def test_reject_requires_a_different_new_department(c):
     assert c.get(f"/api/issues/{iid}", headers=login(c, WATER)).status_code == 200
 
 
+def test_dispatch_trail_shows_sent_and_received_per_hop(c):
+    iid, tr = new_issue(c, login(c, TRIAGE))
+    o, w = login(c, ROADS), login(c, WATER)
+    d = c.get(f"/api/issues/{iid}", headers=o).json()["dispatch"]
+    assert len(d["hops"]) == 1 and d["hops"][0]["from"] == "Triage desk" and d["hops"][0]["received_at"] is None
+    assert iid in [r["id"] for r in c.get("/api/dispatch", headers=o).json()["incoming"]]
+    move(c, iid, o, to="Rejected", reason="water main leak", new_dept_id="water")
+    assert iid in [r["id"] for r in c.get("/api/dispatch", headers=o).json()["sent_waiting"]]  # roads sent it, water hasn't received
+    move(c, iid, w, to="Acknowledged")
+    hops = c.get(f"/api/issues/{iid}", headers=w).json()["dispatch"]["hops"]
+    assert [h["to"] for h in hops][-1] == "Water Supply Dept" and hops[-1]["received_by"] and hops[-1]["from"] == hops[0]["to"]
+    pub = c.get(f"/api/reports/{tr[0]}").json()["dispatch"]["hops"]
+    assert len(pub) == 2 and "received_by" not in pub[0] and pub[1]["received_at"]  # no officer names in public view
+
+
 def _resolved_issue(c):
     iid, tr = new_issue(c, login(c, TRIAGE))
     o = login(c, ROADS)
