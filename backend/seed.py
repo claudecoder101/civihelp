@@ -413,7 +413,13 @@ def _step(con, iid, s, at, cat, dept, cl, officer, staff, sup, rng):
     elif s == "closed_s":
         workflow.transition(con, iss, sup, "Closed", reason="Closed by supervisor — no citizen confirmation", at=at)
     elif s == "closed_v":
-        workflow.citizen_confirm(con, iss, cl["rep"][0]["id"], True, note="Checked today, it is fixed. Thank you.", at=at)
+        # enough linked reporters confirm to reach the 30% quorum
+        for k, r in enumerate([cl["rep"][0]] + [r for r in cl["rep"][1:] if r["linked"]]):
+            iss = con.execute("SELECT * FROM issues WHERE id=?", (iss["id"],)).fetchone()
+            if iss["status"] != "Resolved":
+                break
+            workflow.citizen_confirm(con, iss, r["id"], True, note="Checked today, it is fixed. Thank you." if k == 0 else None,
+                                     at=at + timedelta(minutes=5 * k))
     elif s == "reopened":
         rid = [r for r in cl["rep"] if r["linked"]][-1]["id"]
         workflow.citizen_confirm(con, iss, rid, False, note="Not fixed — the problem is still there.", at=at)

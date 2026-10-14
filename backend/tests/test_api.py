@@ -171,6 +171,30 @@ def test_citizen_confirm_needs_full_tracking_id(c):
     assert c.post(f"/api/reports/{tracking}/confirm", json={"fixed": False}).status_code == 400  # already closed
 
 
+def test_closure_needs_30_percent_of_reporters(c):
+    iid, tr = new_issue(c, login(c, TRIAGE), n_reports=4)  # ceil(0.3 * 4) = 2 confirmations
+    o = login(c, ROADS)
+    move(c, iid, o, to="Acknowledged")
+    assert move(c, iid, o, to="Resolved", closure_reason="Repaired", evidence="patched").status_code == 200
+    assert c.get(f"/api/reports/{tr[0]}").json()["confirmations"] == {"have": 0, "need": 2, "mine": False}
+    r = c.post(f"/api/reports/{tr[0]}/confirm", json={"fixed": True})
+    assert r.status_code == 200 and r.json()["status"] == "Resolved"  # 1 of 2 — still open
+    assert c.post(f"/api/reports/{tr[0]}/confirm", json={"fixed": True}).status_code == 400  # same reporter twice
+    assert c.get(f"/api/reports/{tr[1]}").json()["confirmations"]["have"] == 1
+    r = c.post(f"/api/reports/{tr[1]}/confirm", json={"fixed": True})
+    assert r.status_code == 200 and r.json()["status"] == "Closed"
+
+
+def test_one_dispute_reopens_even_mid_quorum(c):
+    iid, tr = new_issue(c, login(c, TRIAGE), n_reports=4)
+    o = login(c, ROADS)
+    move(c, iid, o, to="Acknowledged")
+    move(c, iid, o, to="Resolved", closure_reason="Repaired", evidence="patched")
+    c.post(f"/api/reports/{tr[0]}/confirm", json={"fixed": True})
+    r = c.post(f"/api/reports/{tr[2]}/confirm", json={"fixed": False, "note": "still broken"})
+    assert r.status_code == 200 and r.json()["status"] == "Reopened"
+
+
 def test_reopen_gives_fresh_ack_deadline_and_is_not_overdue(c):
     iid, tracking, o = _resolved_issue(c)
     k = con()

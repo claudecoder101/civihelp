@@ -24,8 +24,8 @@
 | 18 | App shell: sidebar + top bar (citizen + staff); remove staff↔public links | done | see log |
 | 19 | Demo login: 4 profiles, mock Aadhaar, staff auto-OTP (~3 s, Skip), separation, Your access; reporting needs login | done — Playwright: gate, refusal, 3 profiles, skip 93 ms | see log |
 | 20 | Dispatch trail + Dispatch page + My work + guides | done — 36 tests pass; trail from audit log | see log |
-| 21 | AI match panel | todo | |
-| 22 | 30% reporter quorum (backend + tests + UI) | todo | |
+| 21 | AI match panel | done | see log |
+| 22 | 30% reporter quorum (backend + tests + UI) | done — 38 tests pass; seed reaches quorum | see log |
 | 23 | Try-a-sample buttons (Report, Track) | todo | |
 | 24 | Scroll reveals + CSS 3D tilt | todo | |
 | 25 | Playwright run of all v2 flows, fixes, reseed | todo | |

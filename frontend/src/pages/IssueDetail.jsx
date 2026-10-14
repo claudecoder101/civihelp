@@ -4,6 +4,7 @@ import { api } from '../api'
 import { Badge, ErrorBox, Icon, Loading, StatusBadge, fmtTime, relDue, useApi, useMeta } from '../ui'
 import { gsap, reduced, settle, useEnter, useGSAP } from '../staff/motion'
 import { DispatchTrail, Guides } from '../dispatch'
+import { AiMatchPanel } from '../staff/bits'
 
 const CLOSURE = ['Repaired', 'No action needed', 'Referred to other authority', 'Could not resolve']
 const actionStyle = { Resolved: 'btn-ok', Closed: 'btn-ok', Rejected: 'btn-bad' }
@@ -64,6 +65,8 @@ export default function IssueDetail() {
           <p className="mt-3 rounded-lg bg-ok-soft p-3 text-[15px]"><strong>Closure:</strong> {i.closure_reason}{i.evidence ? ` — evidence: ${i.evidence}` : ''}</p>
         )}
       </header>
+
+      {i.ai_match && <div className="mt-6"><AiMatchPanel m={i.ai_match} /></div>}
 
       <section data-enter className="mt-6 rounded-xl bg-card p-5 shadow-[0_1px_0_rgba(14,34,71,.04),0_10px_28px_-18px_rgba(14,34,71,.25)] ring-1 ring-line/60 sm:p-6">
         <h2 className="flex items-center gap-2 text-lg font-bold"><Icon name="route" className="size-5 text-navy" />Dispatch trail</h2>

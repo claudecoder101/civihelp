@@ -75,7 +75,7 @@ function ReportView({ r, t, reload }) {
           {!issue && <p className="ta mt-5 rounded-md bg-warn-soft p-3 text-warn">{t.awaitingTriage}</p>}
         </section>
 
-        {r.can_confirm && <Confirm id={r.id} t={t} onDone={reload} />}
+        {r.can_confirm && <Confirm id={r.id} t={t} q={r.confirmations} onDone={reload} />}
 
         {r.dispatch && (
           <section className="card p-5 sm:p-6">
@@ -137,7 +137,8 @@ function Fact({ label, value, note, big, wide }) {
   )
 }
 
-function Confirm({ id, t, onDone }) {
+function Confirm({ id, t, q, onDone }) {
+  const { lang } = useLang()
   const [mode, setMode] = useState(null)
   const [note, setNote] = useState('')
   const [busy, setBusy] = useState(false)
@@ -147,7 +148,9 @@ function Confirm({ id, t, onDone }) {
     setBusy(true); setErr(null)
     try {
       await api(`/api/reports/${encodeURIComponent(id)}/confirm`, { body: { fixed, note: note.trim() || null } })
-      setMsg(fixed ? t.thanksFixed : t.thanksReopen)
+      const r = await api(`/api/reports/${encodeURIComponent(id)}`)
+      setMsg(!fixed ? t.thanksReopen : r.status === 'Closed' ? t.thanksFixed
+        : lang === 'ta' ? `நன்றி. மூட இன்னும் ${r.confirmations.need - r.confirmations.have} உறுதிப்படுத்தல் தேவை.` : `Thank you. ${r.confirmations.need - r.confirmations.have} more confirmation${r.confirmations.need - r.confirmations.have === 1 ? '' : 's'} needed to close.`)
       setTimeout(onDone, 1200)
     } catch (e) { setErr(e) } finally { setBusy(false) }
   }
@@ -156,6 +159,14 @@ function Confirm({ id, t, onDone }) {
     <section className="rounded-xl bg-navy p-5 text-white shadow-lg sm:p-7">
       <h2 className="ta text-2xl font-bold">{t.wasFixed}</h2>
       <p className="ta mt-1 text-white/85">{t.fixedLede}</p>
+      {q && (
+        <div className="mt-4 rounded-lg bg-white/10 p-3">
+          <p className="ta flex flex-wrap items-baseline gap-2 text-[15px]"><strong className="text-xl tnum">{q.have} / {q.need}</strong>
+            {lang === 'ta' ? 'குடிமக்கள் உறுதிப்படுத்தல் (புகாரளித்தவர்களில் 30%)' : 'citizen confirmations needed (30% of reporters)'}</p>
+          <div className="mt-2 flex gap-1" aria-hidden>{Array.from({ length: q.need }, (_, k) => <span key={k} className={`h-2 flex-1 rounded-full ${k < q.have ? 'bg-[#2fbf4a]' : 'bg-white/20'}`} />)}</div>
+          {q.mine && <p className="ta mt-2 text-[14px] text-white/80">{lang === 'ta' ? 'நீங்கள் ஏற்கனவே உறுதிசெய்துவிட்டீர்கள்.' : 'You have already confirmed. Waiting for other reporters.'}</p>}
+        </div>
+      )}
       {mode === 'no' ? (
         <div className="mt-4">
           <label htmlFor="reopen-note" className="label ta text-white">{t.reopenNote}</label>
@@ -167,7 +178,7 @@ function Confirm({ id, t, onDone }) {
         </div>
       ) : (
         <div className="mt-5 flex flex-wrap gap-3">
-          <button className="btn btn-ok" disabled={busy} onClick={() => send(true)}><Icon name="check" />{t.yes}</button>
+          <button className="btn btn-ok" disabled={busy || q?.mine} onClick={() => send(true)}><Icon name="check" />{t.yes}</button>
           <button className="btn bg-white text-bad hover:bg-bad-soft" disabled={busy} onClick={() => setMode('no')}>{t.no}</button>
         </div>
       )}

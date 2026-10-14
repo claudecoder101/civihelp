@@ -308,7 +308,17 @@ def track(rid: str, con=Depends(get_con)):
             "notifications": [dict(n) for n in con.execute(
                 "SELECT at, message FROM notifications WHERE report_id=? ORDER BY id DESC", (r["id"],))],
             "dispatch": public_trail(workflow.dispatch_trail(con, i)) if i else None,
+            "confirmations": confirm_state(con, i, r["id"]),
             "can_confirm": bool(i and i["status"] == "Resolved")}
+
+
+def confirm_state(con, i, report_id):
+    if not i or i["status"] != "Resolved":
+        return None
+    have, need = workflow.confirmations(con, i)
+    mine = con.execute("SELECT 1 FROM events WHERE issue_id=? AND report_id=? AND kind='citizen' AND reason LIKE 'Citizen confirmed%' "
+                       "AND created_at >= ?", (i["id"], report_id, i["resolved_at"] or "")).fetchone()
+    return {"have": have, "need": need, "mine": bool(mine)}
 
 
 def public_trail(trail):
@@ -467,7 +477,7 @@ def issue_detail(iid: str, staff=Depends(current_staff), con=Depends(get_con)):
     i = get_issue(con, iid)
     if staff["role"] == "officer" and staff["dept_id"] != i["dept_id"]:
         raise HTTPException(403, "This issue belongs to another department")
-    reps = con.execute("SELECT r.id, r.text, r.created_at, l.id AS link_id, l.linked_by, l.reason AS link_reason "
+    reps = con.execute("SELECT r.id, r.text, r.created_at, r.lat, r.lng, l.id AS link_id, l.linked_by, l.reason AS link_reason "
                        "FROM links l JOIN reports r ON r.id=l.report_id WHERE l.issue_id=? AND l.active=1 ORDER BY r.created_at",
                        (iid,)).fetchall()
     evs = con.execute("SELECT * FROM events WHERE issue_id=? ORDER BY id", (iid,)).fetchall()
@@ -476,7 +486,25 @@ def issue_detail(iid: str, staff=Depends(current_staff), con=Depends(get_con)):
             "verified": None if i["verified"] is None else bool(i["verified"]),
             "reports": [dict(r) for r in reps], "events": [dict(e) for e in evs],
             "dispatch": workflow.dispatch_trail(con, i),
+            "ai_match": ai_match(reps),
             "allowed_actions": workflow.allowed_actions(i, staff)}
+
+
+def ai_match(reps):
+    """Why these reports are one issue: each linked report vs the first, scored by the multilingual model."""
+    if len(reps) < 2:
+        return None
+    a, rest = reps[0], reps[1:]
+    mode = engine.mode_used("ai")
+    sims = engine.similarity(a["text"], [r["text"] for r in rest], mode)
+    t0 = parse(a["created_at"])
+    return {"model": "intfloat/multilingual-e5-small" if mode == "ai" else "TF-IDF baseline", "anchor": {"id": a["id"], "text": a["text"], "tamil": engine.is_tamil(a["text"])},
+            "pairs": [{"id": r["id"], "text": r["text"], "tamil": engine.is_tamil(r["text"]),
+                       "cross_language": engine.is_tamil(r["text"]) != engine.is_tamil(a["text"]),
+                       "meaning": round(engine.meaning(sim, mode), 3),
+                       "distance_m": round(engine.haversine_m(a["lat"], a["lng"], r["lat"], r["lng"])),
+                       "hours": round(abs((parse(r["created_at"]) - t0).total_seconds()) / 3600, 1)}
+                      for r, sim in zip(rest, sims)]}
 
 
 @app.get("/api/dispatch")

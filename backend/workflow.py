@@ -1,4 +1,5 @@
 """Issue state machine: who may move an issue from which status to which, and what each move requires."""
+import math
 import re
 from datetime import timedelta
 
@@ -105,22 +106,43 @@ def transition(con, issue, staff, to, reason=None, public_note=None, closure_rea
     notify(con, issue["id"], msg, at)
 
 
+QUORUM = 0.30  # share of linked reporters who must confirm a fix before it closes
+
+
+def confirmations(con, issue):
+    """(confirmed so far, needed) for the current Resolved round: ceil(30% of linked reporters), at least 1."""
+    n = con.execute("SELECT COUNT(*) FROM links WHERE issue_id=? AND active=1", (issue["id"],)).fetchone()[0]
+    need = max(1, math.ceil(QUORUM * n - 1e-9))
+    have = con.execute("SELECT COUNT(DISTINCT report_id) FROM events WHERE issue_id=? AND kind='citizen' "
+                       "AND reason LIKE 'Citizen confirmed%' AND created_at >= ?", (issue["id"], issue["resolved_at"] or "")).fetchone()[0]
+    return have, need
+
+
 def citizen_confirm(con, issue, report_id, fixed: bool, note=None, at=None):
     at = at or now()
     if issue["status"] != "Resolved":
         raise WorkflowError(400, "Only a resolved issue can be confirmed or reopened")
-    to = "Closed" if fixed else "Reopened"
-    add_event(con, issue_id=issue["id"], report_id=report_id, kind="citizen", from_status="Resolved", to_status=to,
-              actor=f"Citizen ({report_id})", role="resident",
-              reason="Citizen confirmed the fix" if fixed else "Citizen says it is NOT fixed",
-              public_note=note, at=at)
-    if fixed:
-        con.execute("UPDATE issues SET status='Closed', closed_at=?, verified=1 WHERE id=?", (iso(at), issue["id"]))
-        notify(con, issue["id"], "A citizen confirmed the issue is fixed. Closed.", at)
-    else:
+    if not fixed:  # any single reporter can reopen — a dispute always wins
+        add_event(con, issue_id=issue["id"], report_id=report_id, kind="citizen", from_status="Resolved", to_status="Reopened",
+                  actor=f"Citizen ({report_id})", role="resident", reason="Citizen says it is NOT fixed", public_note=note, at=at)
         con.execute("UPDATE issues SET status='Reopened', verified=0, resolved_at=NULL, priority=priority+1, "
                     "ack_due=?, resolve_due=?, escalated=0 WHERE id=?", (*fresh_deadlines(issue, at), issue["id"]))
         notify(con, issue["id"], "Reopened: a citizen reported it is not fixed. Sent back to the department.", at)
+        return
+    if con.execute("SELECT 1 FROM events WHERE issue_id=? AND report_id=? AND kind='citizen' AND reason LIKE 'Citizen confirmed%' "
+                   "AND created_at >= ?", (issue["id"], report_id, issue["resolved_at"] or "")).fetchone():
+        raise WorkflowError(400, "You have already confirmed this fix")
+    have, need = confirmations(con, issue)
+    have += 1
+    done = have >= need
+    add_event(con, issue_id=issue["id"], report_id=report_id, kind="citizen", from_status="Resolved",
+              to_status="Closed" if done else "Resolved", actor=f"Citizen ({report_id})", role="resident",
+              reason=f"Citizen confirmed the fix ({have} of {need} needed)", public_note=note, at=at)
+    if done:
+        con.execute("UPDATE issues SET status='Closed', closed_at=?, verified=1 WHERE id=?", (iso(at), issue["id"]))
+        notify(con, issue["id"], f"{have} citizen{'s' if have > 1 else ''} confirmed the fix. Closed as citizen-verified.", at)
+    else:
+        notify(con, issue["id"], f"A citizen confirmed the fix — {have} of {need} confirmations needed to close.", at)
 
 
 def escalate_overdue(con, at=None):

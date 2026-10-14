@@ -39,3 +39,32 @@ export function Card({ title, sub, eyebrow, children, className = '', icon, ...r
     </section>
   )
 }
+
+/* Why these reports are one issue: the anchor report vs each linked report, scored by the multilingual model.
+   No translation — the model compares meaning across Tamil and English directly. */
+export function AiMatchPanel({ m }) {
+  if (!m) return null
+  const cross = m.pairs.filter(p => p.cross_language).length
+  return (
+    <section data-enter className="overflow-hidden rounded-xl bg-[#0b1a36] text-white shadow-[0_18px_40px_-20px_rgba(11,26,54,.7)]">
+      <div className="flex flex-wrap items-center gap-2 px-5 pt-5 sm:px-6">
+        <span className="rounded-md bg-white/10 px-2 py-1 font-mono text-[12px] text-[#ffb366]">அ↔A</span>
+        <h2 className="text-lg font-bold">AI merged {m.pairs.length + 1} reports into this issue</h2>
+        {cross > 0 && <span className="rounded-full bg-[#ff9933] px-2.5 py-0.5 text-[12px] font-bold text-[#0b1a36]">{cross} cross-language</span>}
+      </div>
+      <p className="px-5 pt-1 text-[14px] text-white/65 sm:px-6">Model: <span className="font-mono">{m.model}</span> — compares meaning across Tamil and English directly, no translation. Every reporter follows this one issue and gets every update.</p>
+      <ul className="mt-4 space-y-3 px-5 pb-5 sm:px-6">
+        {m.pairs.map(p => (
+          <li key={p.id} className="grid gap-2 rounded-lg bg-white/[.06] p-3 ring-1 ring-white/10 md:grid-cols-[1fr_auto_1fr] md:items-center">
+            <p className={`${m.anchor.tamil ? 'ta' : ''} text-[14.5px]`}><span className="mb-0.5 block text-[11px] font-bold uppercase tracking-wider text-white/50">{m.anchor.id} · {m.anchor.tamil ? 'Tamil' : 'English'}</span>“{m.anchor.text}”</p>
+            <div className="flex flex-row items-center justify-center gap-3 md:flex-col md:gap-1">
+              <span className={`rounded-full px-3 py-1 text-[15px] font-extrabold tnum ${p.meaning >= 0.75 ? 'bg-[#2fbf4a] text-[#05210c]' : p.meaning >= 0.5 ? 'bg-[#ffb366] text-[#3a1d00]' : 'bg-white/15'}`}>{Math.round(p.meaning * 100)}%</span>
+              <span className="text-[12px] text-white/60">{p.distance_m} m · {p.hours} h apart</span>
+            </div>
+            <p className={`${p.tamil ? 'ta' : ''} text-[14.5px]`}><span className="mb-0.5 block text-[11px] font-bold uppercase tracking-wider text-white/50">{p.id} · {p.tamil ? 'Tamil' : 'English'}</span>“{p.text}”</p>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
