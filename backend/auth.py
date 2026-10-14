@@ -65,10 +65,10 @@ def verify_otp(con, mobile, code):
     s = _staff(con, mobile)
     t = now()
     o = con.execute("SELECT * FROM otps WHERE mobile=?", (mobile,)).fetchone()
+    if o and o["locked_until"] and parse(o["locked_until"]) > t:  # lock wins, even over a correct code
+        raise AuthError(423, "Too many failed attempts — locked for a few minutes")
     if not o or not o["code_hash"]:
         raise AuthError(401, "Request an OTP first")
-    if o["locked_until"] and parse(o["locked_until"]) > t:
-        raise AuthError(423, "Too many failed attempts — locked for a few minutes")
     if parse(o["expires_at"]) < t:
         raise AuthError(401, "OTP expired — request a new one")
     if not hmac.compare_digest(o["code_hash"], _hash(mobile, (code or "").strip())):

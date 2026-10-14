@@ -35,10 +35,10 @@ def is_overdue(i, t) -> bool:
     return parse(i["resolve_due"]) < t or (i["status"] in ("Assigned", "Reopened") and parse(i["ack_due"]) < t)
 
 
-def fresh_ack_due(issue, at):
-    """New owner / reopened case gets a fresh acknowledgement window (not an instantly-overdue old one)."""
-    _, _, ack_h, _ = RULES.get(issue["category"], ("", "", 24, 72))
-    return iso(at + timedelta(hours=ack_h))
+def fresh_deadlines(issue, at):
+    """New owner / reopened case gets fresh ack + resolve windows (not instantly-overdue old ones)."""
+    _, _, ack_h, res_h = RULES.get(issue["category"], ("", "", 24, 72))
+    return iso(at + timedelta(hours=ack_h)), iso(at + timedelta(hours=res_h))
 
 
 def allowed_actions(issue, staff) -> list[str]:
@@ -77,7 +77,8 @@ def transition(con, issue, staff, to, reason=None, public_note=None, closure_rea
         add_event(con, issue_id=issue["id"], kind="handover", from_status=frm, to_status=to, actor=actor,
                   role=role, reason=f"{reason} → handed to {DEPARTMENTS[new_dept_id][0]}", at=at)
         upd = {"dept_id": new_dept_id, "status": "Assigned", "bounce_count": issue["bounce_count"] + 1,
-               "acknowledged_at": None, "ack_due": fresh_ack_due(issue, at), "escalated": 0}
+               "acknowledged_at": None, "escalated": 0}
+        upd["ack_due"], upd["resolve_due"] = fresh_deadlines(issue, at)
         to = "Assigned"
         msg = f"Your complaint was transferred to {DEPARTMENTS[new_dept_id][0]}."
     else:
@@ -117,7 +118,7 @@ def citizen_confirm(con, issue, report_id, fixed: bool, note=None, at=None):
         notify(con, issue["id"], "A citizen confirmed the issue is fixed. Closed.", at)
     else:
         con.execute("UPDATE issues SET status='Reopened', verified=0, resolved_at=NULL, priority=priority+1, "
-                    "ack_due=?, escalated=0 WHERE id=?", (fresh_ack_due(issue, at), issue["id"]))
+                    "ack_due=?, resolve_due=?, escalated=0 WHERE id=?", (*fresh_deadlines(issue, at), issue["id"]))
         notify(con, issue["id"], "Reopened: a citizen reported it is not fixed. Sent back to the department.", at)
 
 
